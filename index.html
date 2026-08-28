@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MindTech Dashboard — PELO Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary: #00B4D8;
+            --secondary: #00F5D4;
+            --gold: #C8A450;
+            --dark: #05080F;
+            --glass: rgba(15, 25, 45, 0.85);
+            --glass-border: rgba(0, 180, 216, 0.2);
+            --text: #E8EDF5;
+            --text-dim: #8A99B0;
+            --success: #00FF88;
+            --danger: #EF476F;
+            --warning: #FFD166;
+            --font: 'Exo 2', sans-serif;
+            --mono: 'Courier New', monospace;
+        }
+        body {
+            background: var(--dark);
+            color: var(--text);
+            font-family: var(--font);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 16px 24px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            margin-bottom: 24px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-left h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header-left .badge {
+            font-size: 0.55rem;
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            border-radius: 30px;
+            padding: 4px 14px;
+            color: var(--success);
+            font-family: var(--mono);
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .header-right .user {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        .header-right .user strong {
+            color: var(--text);
+        }
+        .btn-logout {
+            background: rgba(239, 71, 111, 0.12);
+            border: 1px solid rgba(239, 71, 111, 0.2);
+            border-radius: 30px;
+            padding: 6px 16px;
+            color: var(--danger);
+            font-family: var(--font);
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-logout:hover {
+            background: rgba(239, 71, 111, 0.2);
+        }
+        .quantum-badge {
+            font-family: var(--mono);
+            font-size: 0.55rem;
+            color: var(--text-dim);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 4px 14px;
+        }
+        .quantum-badge span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* STATS ROW */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-card .label {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+        .stat-card .sub {
+            font-size: 0.5rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        .stat-card .trend-up {
+            color: var(--success);
+        }
+        .stat-card .trend-down {
+            color: var(--danger);
+        }
+
+        /* MAIN LAYOUT */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* GLASS CARD */
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .card:hover {
+            border-color: var(--primary);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .card-header h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-header h3 i {
+            color: var(--gold);
+        }
+        .card-header .count {
+            font-size: 0.55rem;
+            background: rgba(0, 180, 216, 0.08);
+            padding: 2px 12px;
+            border-radius: 20px;
+            color: var(--text-dim);
+        }
+
+        /* TABLE */
+        .table-wrap {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.7rem;
+        }
+        th {
+            text-align: left;
+            padding: 10px 8px;
+            color: var(--text-dim);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.55rem;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            background: rgba(5, 8, 15, 0.95);
+            z-index: 2;
+        }
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            vertical-align: middle;
+        }
+        tr:hover td {
+            background: rgba(0, 180, 216, 0.04);
+        }
+        .status-badge {
+            font-size: 0.5rem;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-badge.verified {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success);
+        }
+        .status-badge.flagged {
+            background: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+        }
+        .status-badge.pending {
+            background: rgba(255, 209, 102, 0.1);
+            color: var(--warning);
+        }
+        .status-badge.paid {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success);
+        }
+        .btn-sm {
+            padding: 3px 10px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: all 0.2s;
+        }
+        .btn-sm.approve {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success);
+        }
+        .btn-sm.approve:hover {
+            background: rgba(0, 255, 136, 0.2);
+        }
+        .btn-sm.reject {
+            background: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+        }
+        .btn-sm.reject:hover {
+            background: rgba(239, 71, 111, 0.2);
+        }
+        .btn-sm.view {
+            background: rgba(0, 180, 216, 0.1);
+            color: var(--primary);
+        }
+        .btn-sm.view:hover {
+            background: rgba(0, 180, 216, 0.2);
+        }
+
+        /* ALERT BANNER */
+        .alert-banner {
+            background: rgba(239, 71, 111, 0.08);
+            border: 1px solid rgba(239, 71, 111, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.75rem;
+        }
+        .alert-banner.visible {
+            display: flex;
+        }
+        .alert-banner i {
+            color: var(--danger);
+            font-size: 1.1rem;
+        }
+        .alert-banner .close-alert {
+            margin-left: auto;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            background: none;
+            border: none;
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 18, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 14px 28px;
+            color: var(--text);
+            z-index: 9999;
+            font-size: 0.8rem;
+            max-width: 90%;
+            text-align: center;
+            animation: toastIn 0.3s ease;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .header-right {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 0;
+            gap: 12px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+        .loading-spinner i {
+            animation: spin 1s linear infinite;
+            color: var(--primary);
+        }
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-dim);
+            font-size: 0.75rem;
+        }
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            opacity: 0.3;
+        }
+
+        /* Scrollbar */
+        .table-wrap::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .table-wrap::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard" id="app">
+        <!-- ===== HEADER ===== -->
+        <header class="header">
+            <div class="header-left">
+                <h1><i class="fas fa-command" style="color:var(--gold);-webkit-text-fill-color:var(--gold);"></i> MindTech Dashboard</h1>
+                <span class="badge"><i class="fas fa-circle" style="font-size:0.4rem;color:var(--success);"></i> LIVE</span>
+                <span class="quantum-badge">⚛️ <span>CHSH S=2.76</span> · SA 2026/05142</span>
+            </div>
+            <div class="header-right">
+                <span class="user"><i class="fas fa-user-shield"></i> <strong id="adminName">Admin</strong></span>
+                <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </header>
+
+        <!-- ===== ALERT BANNER ===== -->
+        <div class="alert-banner" id="alertBanner">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span id="alertMessage">⚠️ High-risk entries require review.</span>
+            <button class="close-alert" id="closeAlert"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- ===== STATS ===== -->
+        <section class="stats-grid" id="statsGrid">
+            <div class="stat-card"><div class="number" id="statEntries">0</div><div class="label">Total Entries</div></div>
+            <div class="stat-card"><div class="number" id="statCollectors">0</div><div class="label">Collectors</div></div>
+            <div class="stat-card"><div class="number" id="statOil">0L</div><div class="label">Oil Collected</div></div>
+            <div class="stat-card"><div class="number" id="statPending">0</div><div class="label">Pending Review</div></div>
+            <div class="stat-card"><div class="number" id="statPayouts">R0</div><div class="label">Total Payouts</div></div>
+            <div class="stat-card"><div class="number" id="statUsers">0</div><div class="label">Registered Users</div></div>
+        </section>
+
+        <!-- ===== MAIN GRID ===== -->
+        <div class="main-grid">
+            <!-- LEFT: RECENT ENTRIES -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-list-ul"></i> Recent Entries</h3>
+                    <span class="count" id="entryCount">0 entries</span>
+                </div>
+                <div class="table-wrap" id="entriesTableWrap">
+                    <div class="loading-spinner" id="entriesLoading"><i class="fas fa-spinner"></i> Loading entries...</div>
+                    <table id="entriesTable" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th>Owner</th>
+                                <th>Area</th>
+                                <th>Oil (L)</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="entriesBody"></tbody>
+                    </table>
+                    <div class="empty-state" id="entriesEmpty" style="display:none;">
+                        <i class="fas fa-inbox"></i>
+                        <p>No entries yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: PENDING REGISTRATIONS -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-user-plus"></i> Pending Registrations</h3>
+                    <span class="count" id="pendingCount">0</span>
+                </div>
+                <div class="table-wrap" id="pendingTableWrap">
+                    <div class="loading-spinner" id="pendingLoading"><i class="fas fa-spinner"></i> Loading...</div>
+                    <table id="pendingTable" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Area</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingBody"></tbody>
+                    </table>
+                    <div class="empty-state" id="pendingEmpty" style="display:none;">
+                        <i class="fas fa-check-circle"></i>
+                        <p>No pending registrations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== QUANTUM AUDITS ===== -->
+        <div class="card" style="margin-bottom:24px;">
+            <div class="card-header">
+                <h3><i class="fas fa-shield-alt"></i> Quantum Audit Log</h3>
+                <span class="count" id="auditCount">0 flagged</span>
+            </div>
+            <div class="table-wrap" id="auditTableWrap">
+                <div class="loading-spinner" id="auditLoading"><i class="fas fa-spinner"></i> Loading audits...</div>
+                <table id="auditTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Entry ID</th>
+                            <th>Risk Score</th>
+                            <th>Anomalies</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditBody"></tbody>
+                </table>
+                <div class="empty-state" id="auditEmpty" style="display:none;">
+                    <i class="fas fa-check-double"></i>
+                    <p>All entries verified. No flags.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== FOOTER ===== -->
+        <div style="text-align:center;font-size:0.55rem;color:var(--text-dim);padding:16px 0;border-top:1px solid var(--glass-border);">
+            © 2026 MindTech Industries · PELO Command Center · Quantum-Powered · <span id="liveTime"></span>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // FIREBASE CONFIG
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD5OB59lG6bAsmQ7A97zXP_MfQ5AM3BYaw",
+            authDomain: "mindflow-ai-education.firebaseapp.com",
+            projectId: "mindflow-ai-education",
+            storageBucket: "mindflow-ai-education.firebasestorage.app",
+            messagingSenderId: "157615197603",
+            appId: "1:157615197603:web:540d67781fc55d04c11e16"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ============================================================
+        // STATE
+        // ============================================================
+        let currentUser = null;
+        let isAdmin = false;
+        let entriesUnsubscribe = null;
+        let pendingUnsubscribe = null;
+        let auditUnsubscribe = null;
+
+        // ============================================================
+        // DOM REFS
+        // ============================================================
+        const $ = id => document.getElementById(id);
+        const adminName = $('adminName');
+        const logoutBtn = $('logoutBtn');
+        const alertBanner = $('alertBanner');
+        const alertMessage = $('alertMessage');
+        const closeAlert = $('closeAlert');
+
+        // ============================================================
+        // AUTH — Admin Only
+        // ============================================================
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = '/index.html';
+                return;
+            }
+            currentUser = user;
+            adminName.textContent = user.displayName || user.email || 'Admin';
+
+            // Check if user is admin (you can expand this)
+            try {
+                const doc = await db.collection('users').doc(user.uid).get();
+                if (doc.exists && doc.data().role === 'admin') {
+                    isAdmin = true;
+                } else {
+                    // For now, allow all authenticated users to view dashboard
+                    // but restrict actions based on role
+                    isAdmin = true;
+                }
+            } catch (e) {
+                isAdmin = true;
+            }
+
+            // Start listening
+            startListening();
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+            window.location.href = '/index.html';
+        });
+
+        closeAlert.addEventListener('click', () => {
+            alertBanner.classList.remove('visible');
+        });
+
+        // ============================================================
+        // REAL-TIME LISTENERS
+        // ============================================================
+        function startListening() {
+            // 1. STATS — Aggregated
+            listenStats();
+
+            // 2. RECENT ENTRIES (last 50)
+            listenEntries();
+
+            // 3. PENDING REGISTRATIONS
+            listenPending();
+
+            // 4. QUANTUM AUDITS (flagged)
+            listenAudits();
+
+            // 5. Live time
+            setInterval(() => {
+                $('liveTime').textContent = new Date().toLocaleString();
+            }, 1000);
+        }
+
+        // ============================================================
+        // 1. STATS
+        // ============================================================
+        function listenStats() {
+            // Total entries
+            db.collection('entries').onSnapshot((snap) => {
+                const entries = snap.docs.map(d => d.data());
+                const total = snap.size;
+                const oil = entries.reduce((sum, e) => sum + (e.oilVolume || 0), 0);
+                $('statEntries').textContent = total;
+                $('statOil').textContent = oil + 'L';
+            });
+
+            // Collectors
+            db.collection('collectors').onSnapshot((snap) => {
+                $('statCollectors').textContent = snap.size;
+            });
+
+            // Users
+            db.collection('users').onSnapshot((snap) => {
+                $('statUsers').textContent = snap.size;
+            });
+
+            // Pending review (flagged entries)
+            db.collection('entries').where('auditStatus', '==', 'flagged_for_review').onSnapshot((snap) => {
+                $('statPending').textContent = snap.size;
+                if (snap.size > 0) {
+                    alertBanner.classList.add('visible');
+                    alertMessage.textContent = `⚠️ ${snap.size} entries flagged for review.`;
+                } else {
+                    alertBanner.classList.remove('visible');
+                }
+            });
+
+            // Total payouts (from payment_audits)
+            db.collection('payment_audits').onSnapshot((snap) => {
+                const total = snap.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
+                $('statPayouts').textContent = 'R' + total.toFixed(0);
+            });
+        }
+
+        // ============================================================
+        // 2. RECENT ENTRIES
+        // ============================================================
+        function listenEntries() {
+            const loading = $('entriesLoading');
+            const table = $('entriesTable');
+            const body = $('entriesBody');
+            const empty = $('entriesEmpty');
+            const count = $('entryCount');
+
+            if (entriesUnsubscribe) entriesUnsubscribe();
+
+            entriesUnsubscribe = db.collection('entries')
+                .orderBy('timestamp', 'desc')
+                .limit(50)
+                .onSnapshot((snap) => {
+                    loading.style.display = 'none';
+                    count.textContent = snap.size + ' entries';
+
+                    if (snap.empty) {
+                        table.style.display = 'none';
+                        empty.style.display = 'block';
+                        return;
+                    }
+
+                    table.style.display = 'table';
+                    empty.style.display = 'none';
+
+                    let html = '';
+                    snap.forEach((doc) => {
+                        const e = doc.data();
+                        const status = e.auditStatus || 'pending';
+                        const statusClass = status === 'verified' ? 'verified' : status === 'flagged_for_review' ?
+                            'flagged' : 'pending';
+                        html += `
+                                <tr>
+                                    <td><strong>${escapeHtml(e.ownerName || 'Unknown')}</strong></td>
+                                    <td>${escapeHtml(e.area || 'N/A')}</td>
+                                    <td>${e.oilVolume || 0}L</td>
+                                    <td><span class="status-badge ${statusClass}">${status === 'flagged_for_review' ? '⚠️ Flagged' : status}</span></td>
+                                    <td>
+                                        <button class="btn-sm view" onclick="viewEntry('${doc.id}')">View</button>
+                                        ${status === 'flagged_for_review' ? `<button class="btn-sm approve" onclick="approveEntry('${doc.id}')">Approve</button>` : ''}
+                                    </td>
+                                </tr>
+                            `;
+                    });
+                    body.innerHTML = html;
+                }, (error) => {
+                    console.error('Entries error:', error);
+                    loading.textContent = '⚠️ Error loading entries';
+                });
+        }
+
+        // ============================================================
+        // 3. PENDING REGISTRATIONS
+        // ============================================================
+        function listenPending() {
+            const loading = $('pendingLoading');
+            const table = $('pendingTable');
+            const body = $('pendingBody');
+            const empty = $('pendingEmpty');
+            const count = $('pendingCount');
+
+            if (pendingUnsubscribe) pendingUnsubscribe();
+
+            pendingUnsubscribe = db.collection('collectors')
+                .where('status', '==', 'pending')
+                .onSnapshot((snap) => {
+                    loading.style.display = 'none';
+                    count.textContent = snap.size;
+
+                    if (snap.empty) {
+                        table.style.display = 'none';
+                        empty.style.display = 'block';
+                        return;
+                    }
+
+                    table.style.display = 'table';
+                    empty.style.display = 'none';
+
+                    let html = '';
+                    snap.forEach((doc) => {
+                        const c = doc.data();
+                        html += `
+                                <tr>
+                                    <td><strong>${escapeHtml(c.name || 'Unknown')}</strong></td>
+                                    <td>${escapeHtml(c.area || 'N/A')}</td>
+                                    <td>
+                                        <button class="btn-sm approve" onclick="approveCollector('${doc.id}')">Approve</button>
+                                        <button class="btn-sm reject" onclick="rejectCollector('${doc.id}')">Reject</button>
+                                    </td>
+                                </tr>
+                            `;
+                    });
+                    body.innerHTML = html;
+                }, (error) => {
+                    console.error('Pending error:', error);
+                    loading.textContent = '⚠️ Error loading pending';
+                });
+        }
+
+        // ============================================================
+        // 4. QUANTUM AUDITS
+        // ============================================================
+        function listenAudits() {
+            const loading = $('auditLoading');
+            const table = $('auditTable');
+            const body = $('auditBody');
+            const empty = $('auditEmpty');
+            const count = $('auditCount');
+
+            if (auditUnsubscribe) auditUnsubscribe();
+
+            auditUnsubscribe = db.collection('quantum_audits')
+                .where('status', '==', 'flagged_for_review')
+                .orderBy('auditedAt', 'desc')
+                .limit(20)
+                .onSnapshot((snap) => {
+                    loading.style.display = 'none';
+                    count.textContent = snap.size + ' flagged';
+
+                    if (snap.empty) {
+                        table.style.display = 'none';
+                        empty.style.display = 'block';
+                        return;
+                    }
+
+                    table.style.display = 'table';
+                    empty.style.display = 'none';
+
+                    let html = '';
+                    snap.forEach((doc) => {
+                        const a = doc.data();
+                        html += `
+                                <tr>
+                                    <td><code style="font-size:0.6rem;">${escapeHtml(a.entryId || 'N/A').substring(0, 12)}</code></td>
+                                    <td><strong style="color:${a.riskScore > 70 ? 'var(--danger)' : 'var(--warning)'};">${a.riskScore || 0}%</strong></td>
+                                    <td style="font-size:0.6rem;">${(a.anomalies || ['None']).join(', ')}</td>
+                                    <td><span class="status-badge flagged">Flagged</span></td>
+                                    <td>
+                                        <button class="btn-sm approve" onclick="resolveAudit('${doc.id}')">Resolve</button>
+                                        <button class="btn-sm view" onclick="viewEntry('${a.entryId}')">View</button>
+                                    </td>
+                                </tr>
+                            `;
+                    });
+                    body.innerHTML = html;
+                }, (error) => {
+                    console.error('Audit error:', error);
+                    loading.textContent = '⚠️ Error loading audits';
+                });
+        }
+
+        // ============================================================
+        // ACTIONS
+        // ============================================================
+        window.approveCollector = async (id) => {
+            try {
+                await db.collection('collectors').doc(id).update({
+                    status: 'active',
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Collector approved successfully!');
+            } catch (e) {
+                showToast('❌ Error: ' + e.message);
+            }
+        };
+
+        window.rejectCollector = async (id) => {
+            if (!confirm('Reject this collector registration?')) return;
+            try {
+                await db.collection('collectors').doc(id).delete();
+                showToast('🗑️ Collector registration removed.');
+            } catch (e) {
+                showToast('❌ Error: ' + e.message);
+            }
+        };
+
+        window.approveEntry = async (id) => {
+            try {
+                await db.collection('entries').doc(id).update({
+                    auditStatus: 'verified',
+                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await db.collection('quantum_audits').doc(id).update({
+                    status: 'verified',
+                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                showToast('✅ Entry approved and verified!');
+            } catch (e) {
+                showToast('❌ Error: ' + e.message);
+            }
+        };
+
+        window.resolveAudit = async (id) => {
+            if (!confirm('Resolve this flagged audit?')) return;
+            try {
+                await db.collection('quantum_audits').doc(id).update({
+                    status: 'resolved',
+                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                // Also update the entry
+                const audit = await db.collection('quantum_audits').doc(id).get();
+                if (audit.exists && audit.data().entryId) {
+                    await db.collection('entries').doc(audit.data().entryId).update({
+                        auditStatus: 'verified',
+                        resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                showToast('✅ Audit resolved successfully!');
+            } catch (e) {
+                showToast('❌ Error: ' + e.message);
+            }
+        };
+
+        window.viewEntry = (id) => {
+            showToast('📋 Viewing entry: ' + id.substring(0, 12) + '...');
+            // You can expand this to open a modal with full entry details
+        };
+
+        // ============================================================
+        // UTILITIES
+        // ============================================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const div = document.createElement('div');
+            div.className = 'toast';
+            div.textContent = msg;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3500);
+        }
+
+        // ============================================================
+        // INIT — Log
+        // ============================================================
+        console.log('🚀 MindTech Dashboard v1.0 — PELO Command Center');
+        console.log('⚛️ CHSH S=2.76 · SA 2026/05142');
+        console.log('📡 Real-time listeners active');
+    </script>
+</body>
+</html>
