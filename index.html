@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
     <title>MindTech Dashboard — PELO Command Center</title>
 
-    <!-- ===== FONTS & ICONS (Same as Collector App) ===== -->
+    <!-- ===== FONTS & ICONS ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -20,7 +20,7 @@
 
     <style>
         /* ============================================================
-           STYLES — EXACTLY MATCHING COLLECTOR APP (pelocol12.html)
+           STYLES — EXACTLY MATCHING COLLECTOR APP
            ============================================================ */
         * {
             margin: 0;
@@ -68,7 +68,52 @@
             z-index: 1;
         }
 
-        /* ===== GLASS CARD (Same as Collector App) ===== */
+        /* ===== LOADING SPLASH — PREVENTS FLICKER ===== */
+        #loadingSplash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 99999;
+            transition: opacity 0.5s ease;
+        }
+        #loadingSplash.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loadingSplash .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 180, 216, 0.1);
+            border-top: 3px solid var(--pelo-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        #loadingSplash .logo {
+            height: 60px;
+            width: auto;
+            filter: drop-shadow(0 0 30px var(--pelo-gold-glow));
+        }
+        #loadingSplash p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            letter-spacing: 2px;
+        }
+
+        /* ===== GLASS CARD ===== */
         .glass-card {
             background: rgba(15, 25, 45, 0.30);
             backdrop-filter: blur(20px);
@@ -109,7 +154,7 @@
             color: var(--text-secondary);
         }
 
-        /* ===== HEADER (Same as Collector App) ===== */
+        /* ===== HEADER ===== */
         .header {
             display: flex;
             align-items: center;
@@ -181,7 +226,7 @@
             background: rgba(239, 71, 111, 0.25);
         }
 
-        /* ===== BUTTONS (Same Style as Collector App) ===== */
+        /* ===== BUTTONS ===== */
         .btn-primary {
             width: 100%;
             padding: 14px;
@@ -234,6 +279,38 @@
             background: rgba(239, 71, 111, 0.25);
         }
 
+        .btn-sm {
+            padding: 3px 10px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-exo);
+            transition: all 0.2s;
+        }
+        .btn-sm.approve {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success);
+        }
+        .btn-sm.approve:hover {
+            background: rgba(0, 255, 136, 0.2);
+        }
+        .btn-sm.reject {
+            background: rgba(239, 71, 111, 0.1);
+            color: var(--danger);
+        }
+        .btn-sm.reject:hover {
+            background: rgba(239, 71, 111, 0.2);
+        }
+        .btn-sm.view {
+            background: rgba(0, 180, 216, 0.1);
+            color: var(--primary);
+        }
+        .btn-sm.view:hover {
+            background: rgba(0, 180, 216, 0.2);
+        }
+
         /* ===== STATS GRID ===== */
         .stats-grid {
             display: grid;
@@ -269,7 +346,15 @@
             margin-top: 2px;
         }
 
-        /* ===== TAB SYSTEM (Stable) ===== */
+        /* ===== ACTION ROW ===== */
+        .action-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        /* ===== TAB SYSTEM ===== */
         .tab-bar {
             display: flex;
             gap: 8px;
@@ -372,46 +457,6 @@
             color: var(--warning);
         }
 
-        .btn-sm {
-            padding: 3px 10px;
-            border: none;
-            border-radius: 20px;
-            font-size: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: var(--font-exo);
-            transition: all 0.2s;
-        }
-        .btn-sm.approve {
-            background: rgba(0, 255, 136, 0.1);
-            color: var(--success);
-        }
-        .btn-sm.approve:hover {
-            background: rgba(0, 255, 136, 0.2);
-        }
-        .btn-sm.reject {
-            background: rgba(239, 71, 111, 0.1);
-            color: var(--danger);
-        }
-        .btn-sm.reject:hover {
-            background: rgba(239, 71, 111, 0.2);
-        }
-        .btn-sm.view {
-            background: rgba(0, 180, 216, 0.1);
-            color: var(--primary);
-        }
-        .btn-sm.view:hover {
-            background: rgba(0, 180, 216, 0.2);
-        }
-
-        /* ===== ACTION BUTTONS ROW ===== */
-        .action-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
@@ -441,7 +486,7 @@
             }
         }
 
-        /* ===== FOOTER (Same as Collector App) ===== */
+        /* ===== FOOTER ===== */
         .footer {
             text-align: center;
             padding: 20px 20px 10px;
@@ -480,37 +525,6 @@
             font-size: 0.5rem;
             color: var(--text-secondary);
             margin-top: 4px;
-        }
-
-        /* ===== LOADING ===== */
-        .loading-spinner {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 0;
-            gap: 12px;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-        }
-        .loading-spinner i {
-            animation: spin 1s linear infinite;
-            color: var(--primary);
-        }
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-        .empty-state {
-            text-align: center;
-            padding: 30px 0;
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-        }
-        .empty-state i {
-            font-size: 2rem;
-            margin-bottom: 8px;
-            opacity: 0.3;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -565,7 +579,6 @@
             }
         }
 
-        /* Scrollbar */
         .table-wrap::-webkit-scrollbar {
             width: 4px;
             height: 4px;
@@ -578,14 +591,48 @@
             background: var(--primary);
             border-radius: 4px;
         }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            opacity: 0.3;
+        }
+
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 0;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        .loading-spinner i {
+            animation: spin 1s linear infinite;
+            color: var(--primary);
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="container" id="app">
+    <!-- ===== LOADING SPLASH — PREVENTS FLICKER ===== -->
+    <div id="loadingSplash">
+        <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO" class="logo" onerror="this.src='https://i.postimg.cc/T114NczG/pelo-recovery-image-removebg-preview.png'" />
+        <div class="spinner"></div>
+        <p>⚛️ CHSH S=2.76 · Initializing...</p>
+    </div>
 
-        <!-- ===== HEADER (Same as Collector App) ===== -->
+    <!-- ===== MAIN APP ===== -->
+    <div class="container" id="app" style="display:none;">
+
+        <!-- ===== HEADER ===== -->
         <header class="header">
             <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO Recovery Centre" class="header-logo" onerror="this.src='https://i.postimg.cc/T114NczG/pelo-recovery-image-removebg-preview.png'" />
             <div class="header-text">
@@ -609,15 +656,16 @@
             <div class="stat-card"><div class="number" id="statUsers">0</div><div class="label">Registered Users</div></div>
         </section>
 
-        <!-- ===== ACTION BUTTONS ROW (NEW) ===== -->
+        <!-- ===== ACTION BUTTONS ===== -->
         <div class="action-row">
+            <button class="btn-secondary" onclick="window.location.href='/index.html'"><i class="fas fa-arrow-left"></i> Back to App</button>
             <button class="btn-secondary" onclick="document.getElementById('tab-entries').click();"><i class="fas fa-list-ul"></i> View Entries</button>
             <button class="btn-secondary" onclick="document.getElementById('tab-pending').click();"><i class="fas fa-user-plus"></i> Pending Approvals</button>
             <button class="btn-secondary" onclick="document.getElementById('tab-audits').click();"><i class="fas fa-shield-alt"></i> Audit Log</button>
-            <button class="btn-secondary" onclick="window.location.href='/index.html';"><i class="fas fa-arrow-left"></i> Back to App</button>
+            <button class="btn-secondary" onclick="location.reload();"><i class="fas fa-sync-alt"></i> Refresh</button>
         </div>
 
-        <!-- ===== TAB SYSTEM (Stable) ===== -->
+        <!-- ===== TAB SYSTEM ===== -->
         <div class="tab-bar">
             <button class="tab-btn active" data-tab="tab-entries"><i class="fas fa-list-ul"></i> Recent Entries</button>
             <button class="tab-btn" data-tab="tab-pending"><i class="fas fa-user-plus"></i> Pending Registrations</button>
@@ -684,7 +732,7 @@
             </div>
         </div>
 
-        <!-- ===== FOOTER (Same as Collector App) ===== -->
+        <!-- ===== FOOTER ===== -->
         <div class="footer">
             <div class="footer-logos">
                 <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO Recovery" class="footer-logo" onerror="this.style.display='none'" />
@@ -698,7 +746,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT — STABLE AUTH + REAL-TIME LISTENERS
+    JAVASCRIPT — STABLE AUTH (NO FLICKER)
     ============================================================ -->
     <script>
         // ============================================================
@@ -718,27 +766,33 @@
         const db = firebase.firestore();
 
         // ============================================================
-        // STATE
-        // ============================================================
-        let currentUser = null;
-        let entriesUnsubscribe = null;
-        let pendingUnsubscribe = null;
-        let auditUnsubscribe = null;
-        let authResolved = false;
-
-        // ============================================================
         // DOM REFS
         // ============================================================
         const $ = id => document.getElementById(id);
+        const loadingSplash = $('loadingSplash');
+        const appContainer = $('app');
         const userNameDisplay = $('userNameDisplay');
         const logoutBtn = $('logoutBtn');
 
         // ============================================================
-        // AUTH — STABLE (NO FLICKER)
+        // STATE
+        // ============================================================
+        let authResolved = false;
+        let entriesUnsubscribe = null;
+        let pendingUnsubscribe = null;
+        let auditUnsubscribe = null;
+
+        // ============================================================
+        // AUTH — STABLE (RENDERS ONCE)
         // ============================================================
         auth.onAuthStateChanged(async (user) => {
             if (authResolved) return;
             authResolved = true;
+
+            // Hide splash after 0.5s minimum
+            setTimeout(() => {
+                loadingSplash.classList.add('hidden');
+            }, 500);
 
             if (!user) {
                 window.location.href = '/index.html';
@@ -747,8 +801,9 @@
 
             currentUser = user;
             userNameDisplay.textContent = user.displayName || user.email || 'Admin';
+            appContainer.style.display = 'block';
 
-            // Start real-time listeners
+            // Start listeners
             startListening();
         });
 
@@ -758,23 +813,20 @@
         });
 
         // ============================================================
-        // TAB SYSTEM — STABLE
+        // TABS — STABLE
         // ============================================================
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                // Update button states
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
 
-                // Update content
-                const target = this.dataset.tab;
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                document.getElementById(target).classList.add('active');
+                document.getElementById(this.dataset.tab).classList.add('active');
             });
         });
 
         // ============================================================
-        // REAL-TIME LISTENERS
+        // LISTENERS
         // ============================================================
         function startListening() {
             listenStats();
@@ -783,9 +835,6 @@
             listenAudits();
         }
 
-        // ============================================================
-        // 1. STATS
-        // ============================================================
         function listenStats() {
             db.collection('entries').onSnapshot((snap) => {
                 const entries = snap.docs.map(d => d.data());
@@ -813,9 +862,6 @@
             });
         }
 
-        // ============================================================
-        // 2. RECENT ENTRIES
-        // ============================================================
         function listenEntries() {
             const loading = $('entriesLoading');
             const table = $('entriesTable');
@@ -835,41 +881,39 @@
                     if (snap.empty) {
                         table.style.display = 'none';
                         empty.style.display = 'block';
+                        body.innerHTML = '';
                         return;
                     }
 
-                    table.style.display = 'table';
                     empty.style.display = 'none';
+                    table.style.display = 'table';
+                    body.innerHTML = '';
 
-                    let html = '';
-                    snap.forEach((doc) => {
-                        const e = doc.data();
-                        const status = e.auditStatus || 'pending';
+                    snap.docs.forEach((doc) => {
+                        const data = doc.data();
+                        const status = data.auditStatus || 'pending';
                         const statusClass = status === 'verified' ? 'verified' : status === 'flagged_for_review' ?
                             'flagged' : 'pending';
-                        html += `
-                            <tr>
-                                <td><strong>${escapeHtml(e.ownerName || 'Unknown')}</strong></td>
-                                <td>${escapeHtml(e.area || 'N/A')}</td>
-                                <td>${e.oilVolume || 0}L</td>
-                                <td><span class="status-badge ${statusClass}">${status === 'flagged_for_review' ? '⚠️ Flagged' : status}</span></td>
-                                <td>
-                                    <button class="btn-sm view" onclick="viewEntry('${doc.id}')">View</button>
-                                    ${status === 'flagged_for_review' ? `<button class="btn-sm approve" onclick="approveEntry('${doc.id}')">Approve</button>` : ''}
-                                </td>
-                            </tr>
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><strong>${escapeHtml(data.ownerName || 'Unknown')}</strong></td>
+                            <td>${escapeHtml(data.area || 'N/A')}</td>
+                            <td>${data.oilVolume || 0}L</td>
+                            <td><span class="status-badge ${statusClass}">${status === 'flagged_for_review' ? '⚠️ Flagged' : status}</span></td>
+                            <td>
+                                <button class="btn-sm view" onclick="viewEntry('${doc.id}')">View</button>
+                                ${status === 'flagged_for_review' ? `<button class="btn-sm approve" onclick="approveEntry('${doc.id}')">Approve</button>` : ''}
+                            </td>
                         `;
+                        body.appendChild(row);
                     });
-                    body.innerHTML = html;
                 }, (error) => {
-                    console.error('Entries error:', error);
-                    loading.textContent = '⚠️ Error loading entries';
+                    loading.style.display = 'none';
+                    showToast(`Error: ${error.message}`);
                 });
         }
 
-        // ============================================================
-        // 3. PENDING REGISTRATIONS
-        // ============================================================
         function listenPending() {
             const loading = $('pendingLoading');
             const table = $('pendingTable');
@@ -888,36 +932,33 @@
                     if (snap.empty) {
                         table.style.display = 'none';
                         empty.style.display = 'block';
+                        body.innerHTML = '';
                         return;
                     }
 
-                    table.style.display = 'table';
                     empty.style.display = 'none';
+                    table.style.display = 'table';
+                    body.innerHTML = '';
 
-                    let html = '';
-                    snap.forEach((doc) => {
-                        const c = doc.data();
-                        html += `
-                            <tr>
-                                <td><strong>${escapeHtml(c.name || 'Unknown')}</strong></td>
-                                <td>${escapeHtml(c.area || 'N/A')}</td>
-                                <td>
-                                    <button class="btn-sm approve" onclick="approveCollector('${doc.id}')">Approve</button>
-                                    <button class="btn-sm reject" onclick="rejectCollector('${doc.id}')">Reject</button>
-                                </td>
-                            </tr>
+                    snap.docs.forEach((doc) => {
+                        const data = doc.data();
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><strong>${escapeHtml(data.name || 'Unknown')}</strong></td>
+                            <td>${escapeHtml(data.area || 'N/A')}</td>
+                            <td>
+                                <button class="btn-sm approve" onclick="approveCollector('${doc.id}')">Approve</button>
+                                <button class="btn-sm reject" onclick="rejectCollector('${doc.id}')">Reject</button>
+                            </td>
                         `;
+                        body.appendChild(row);
                     });
-                    body.innerHTML = html;
                 }, (error) => {
-                    console.error('Pending error:', error);
-                    loading.textContent = '⚠️ Error loading pending';
+                    loading.style.display = 'none';
+                    showToast(`Error: ${error.message}`);
                 });
         }
 
-        // ============================================================
-        // 4. QUANTUM AUDITS
-        // ============================================================
         function listenAudits() {
             const loading = $('auditLoading');
             const table = $('auditTable');
@@ -938,32 +979,32 @@
                     if (snap.empty) {
                         table.style.display = 'none';
                         empty.style.display = 'block';
+                        body.innerHTML = '';
                         return;
                     }
 
-                    table.style.display = 'table';
                     empty.style.display = 'none';
+                    table.style.display = 'table';
+                    body.innerHTML = '';
 
-                    let html = '';
-                    snap.forEach((doc) => {
-                        const a = doc.data();
-                        html += `
-                            <tr>
-                                <td><code style="font-size:0.6rem;">${escapeHtml(a.entryId || 'N/A').substring(0, 12)}</code></td>
-                                <td><strong style="color:${a.riskScore > 70 ? 'var(--danger)' : 'var(--warning)'};">${a.riskScore || 0}%</strong></td>
-                                <td style="font-size:0.6rem;">${(a.anomalies || ['None']).join(', ')}</td>
-                                <td><span class="status-badge flagged">Flagged</span></td>
-                                <td>
-                                    <button class="btn-sm approve" onclick="resolveAudit('${doc.id}')">Resolve</button>
-                                    <button class="btn-sm view" onclick="viewEntry('${a.entryId}')">View</button>
-                                </td>
-                            </tr>
+                    snap.docs.forEach((doc) => {
+                        const data = doc.data();
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><code style="font-size:0.6rem;">${escapeHtml(data.entryId || 'N/A').substring(0, 12)}</code></td>
+                            <td><strong style="color:${data.riskScore > 70 ? 'var(--danger)' : 'var(--warning)'};">${data.riskScore || 0}%</strong></td>
+                            <td style="font-size:0.6rem;">${(data.anomalies || ['None']).join(', ')}</td>
+                            <td><span class="status-badge flagged">Flagged</span></td>
+                            <td>
+                                <button class="btn-sm approve" onclick="resolveAudit('${doc.id}')">Resolve</button>
+                                <button class="btn-sm view" onclick="viewEntry('${data.entryId}')">View</button>
+                            </td>
                         `;
+                        body.appendChild(row);
                     });
-                    body.innerHTML = html;
                 }, (error) => {
-                    console.error('Audit error:', error);
-                    loading.textContent = '⚠️ Error loading audits';
+                    loading.style.display = 'none';
+                    showToast(`Error: ${error.message}`);
                 });
         }
 
@@ -976,17 +1017,17 @@
                     status: 'active',
                     approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showToast('✅ Collector approved successfully!');
+                showToast('✅ Collector approved!');
             } catch (e) {
                 showToast('❌ Error: ' + e.message);
             }
         };
 
         window.rejectCollector = async (id) => {
-            if (!confirm('Reject this collector registration?')) return;
+            if (!confirm('Reject this collector?')) return;
             try {
                 await db.collection('collectors').doc(id).delete();
-                showToast('🗑️ Collector registration removed.');
+                showToast('🗑️ Collector removed.');
             } catch (e) {
                 showToast('❌ Error: ' + e.message);
             }
@@ -1002,7 +1043,7 @@
                     status: 'verified',
                     resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                showToast('✅ Entry approved and verified!');
+                showToast('✅ Entry approved!');
             } catch (e) {
                 showToast('❌ Error: ' + e.message);
             }
@@ -1022,14 +1063,18 @@
                         resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
-                showToast('✅ Audit resolved successfully!');
+                showToast('✅ Audit resolved!');
             } catch (e) {
                 showToast('❌ Error: ' + e.message);
             }
         };
 
         window.viewEntry = (id) => {
-            showToast('📋 Viewing entry: ' + id.substring(0, 12) + '...');
+            db.collection('entries').doc(id).get().then(doc => {
+                if (!doc.exists) return;
+                const d = doc.data();
+                alert(`📋 ENTRY DETAILS\n\nOwner: ${d.ownerName}\nArea: ${d.area}\nOil: ${d.oilVolume}L\nContact: ${d.contactPerson}\nStatus: ${d.auditStatus || 'pending'}`);
+            });
         };
 
         // ============================================================
@@ -1051,14 +1096,6 @@
             document.body.appendChild(div);
             setTimeout(() => div.remove(), 3500);
         }
-
-        // ============================================================
-        // INIT — Log
-        // ============================================================
-        console.log('🚀 MindTech Dashboard v2.0 — Stable');
-        console.log('⚛️ CHSH S=2.76 · SA 2026/05142');
-        console.log('📡 Real-time listeners active');
-        console.log('👤 Auth resolved, dashboard ready.');
     </script>
 
 </body>
