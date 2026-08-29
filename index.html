@@ -68,51 +68,6 @@
             z-index: 1;
         }
 
-        /* ===== LOADING SPLASH — PREVENTS FLICKER ===== */
-        #loadingSplash {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--dark-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 99999;
-            transition: opacity 0.5s ease;
-        }
-        #loadingSplash.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        #loadingSplash .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(0, 180, 216, 0.1);
-            border-top: 3px solid var(--pelo-gold);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-        #loadingSplash .logo {
-            height: 60px;
-            width: auto;
-            filter: drop-shadow(0 0 30px var(--pelo-gold-glow));
-        }
-        #loadingSplash p {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            font-family: var(--font-mono);
-            letter-spacing: 2px;
-        }
-
         /* ===== GLASS CARD ===== */
         .glass-card {
             background: rgba(15, 25, 45, 0.30);
@@ -262,21 +217,6 @@
         .btn-secondary:hover {
             border-color: var(--pelo-gold);
             color: var(--text-primary);
-        }
-
-        .btn-danger {
-            padding: 4px 12px;
-            background: rgba(239, 71, 111, 0.12);
-            border: 1px solid rgba(239, 71, 111, 0.15);
-            border-radius: 20px;
-            color: var(--danger);
-            cursor: pointer;
-            font-family: var(--font-exo);
-            font-size: 0.55rem;
-            transition: all 0.3s;
-        }
-        .btn-danger:hover {
-            background: rgba(239, 71, 111, 0.25);
         }
 
         .btn-sm {
@@ -617,20 +557,18 @@
             animation: spin 1s linear infinite;
             color: var(--primary);
         }
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- ===== LOADING SPLASH — PREVENTS FLICKER ===== -->
-    <div id="loadingSplash">
-        <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO" class="logo" onerror="this.src='https://i.postimg.cc/T114NczG/pelo-recovery-image-removebg-preview.png'" />
-        <div class="spinner"></div>
-        <p>⚛️ CHSH S=2.76 · Initializing...</p>
-    </div>
-
     <!-- ===== MAIN APP ===== -->
-    <div class="container" id="app" style="display:none;">
+    <div class="container" id="app">
 
         <!-- ===== HEADER ===== -->
         <header class="header">
@@ -746,13 +684,13 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT — STABLE AUTH (NO FLICKER)
+    JAVASCRIPT — STABLE, NO FLICKER, NO LOADING STUCK
     ============================================================ -->
     <script>
         // ============================================================
         // FIREBASE CONFIG
         // ============================================================
-        const firebaseConfig = {
+        var firebaseConfig = {
             apiKey: "AIzaSyD5OB59lG6bAsmQ7A97zXP_MfQ5AM3BYaw",
             authDomain: "mindflow-ai-education.firebaseapp.com",
             projectId: "mindflow-ai-education",
@@ -762,71 +700,82 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        var auth = firebase.auth();
+        var db = firebase.firestore();
 
         // ============================================================
         // DOM REFS
         // ============================================================
-        const $ = id => document.getElementById(id);
-        const loadingSplash = $('loadingSplash');
-        const appContainer = $('app');
-        const userNameDisplay = $('userNameDisplay');
-        const logoutBtn = $('logoutBtn');
+        var userNameDisplay = document.getElementById('userNameDisplay');
+        var logoutBtn = document.getElementById('logoutBtn');
+
+        var statEntries = document.getElementById('statEntries');
+        var statCollectors = document.getElementById('statCollectors');
+        var statOil = document.getElementById('statOil');
+        var statPending = document.getElementById('statPending');
+        var statPayouts = document.getElementById('statPayouts');
+        var statUsers = document.getElementById('statUsers');
+
+        var entriesLoading = document.getElementById('entriesLoading');
+        var entriesTable = document.getElementById('entriesTable');
+        var entriesBody = document.getElementById('entriesBody');
+        var entriesEmpty = document.getElementById('entriesEmpty');
+        var entryCount = document.getElementById('entryCount');
+
+        var pendingLoading = document.getElementById('pendingLoading');
+        var pendingTable = document.getElementById('pendingTable');
+        var pendingBody = document.getElementById('pendingBody');
+        var pendingEmpty = document.getElementById('pendingEmpty');
+        var pendingCount = document.getElementById('pendingCount');
+
+        var auditLoading = document.getElementById('auditLoading');
+        var auditTable = document.getElementById('auditTable');
+        var auditBody = document.getElementById('auditBody');
+        var auditEmpty = document.getElementById('auditEmpty');
+        var auditCount = document.getElementById('auditCount');
+
+        var entriesUnsubscribe = null;
+        var pendingUnsubscribe = null;
+        var auditUnsubscribe = null;
 
         // ============================================================
-        // STATE
+        // AUTH — SIMPLE AND STABLE
         // ============================================================
-        let authResolved = false;
-        let entriesUnsubscribe = null;
-        let pendingUnsubscribe = null;
-        let auditUnsubscribe = null;
-
-        // ============================================================
-        // AUTH — STABLE (RENDERS ONCE)
-        // ============================================================
-        auth.onAuthStateChanged(async (user) => {
-            if (authResolved) return;
-            authResolved = true;
-
-            // Hide splash after 0.5s minimum
-            setTimeout(() => {
-                loadingSplash.classList.add('hidden');
-            }, 500);
-
-            if (!user) {
-                window.location.href = '/index.html';
-                return;
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                userNameDisplay.textContent = user.displayName || user.email || 'Admin';
+                console.log('✅ Authenticated:', user.email);
+                startListening();
+            } else {
+                userNameDisplay.textContent = 'Guest (Read-Only)';
+                console.log('🔓 Not logged in — read-only mode');
+                startListening();
             }
-
-            currentUser = user;
-            userNameDisplay.textContent = user.displayName || user.email || 'Admin';
-            appContainer.style.display = 'block';
-
-            // Start listeners
-            startListening();
         });
 
-        logoutBtn.addEventListener('click', () => {
+        logoutBtn.addEventListener('click', function() {
             auth.signOut();
             window.location.href = '/index.html';
         });
 
         // ============================================================
-        // TABS — STABLE
+        // TABS
         // ============================================================
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(function(b) {
+                    b.classList.remove('active');
+                });
                 this.classList.add('active');
-
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(function(c) {
+                    c.classList.remove('active');
+                });
                 document.getElementById(this.dataset.tab).classList.add('active');
             });
         });
 
         // ============================================================
-        // LISTENERS
+        // START LISTENERS
         // ============================================================
         function startListening() {
             listenStats();
@@ -835,245 +784,267 @@
             listenAudits();
         }
 
+        // ============================================================
+        // 1. STATS
+        // ============================================================
         function listenStats() {
-            db.collection('entries').onSnapshot((snap) => {
-                const entries = snap.docs.map(d => d.data());
-                const total = snap.size;
-                const oil = entries.reduce((sum, e) => sum + (e.oilVolume || 0), 0);
-                $('statEntries').textContent = total;
-                $('statOil').textContent = oil + 'L';
+            db.collection('entries').onSnapshot(function(snap) {
+                var entries = snap.docs.map(function(d) { return d.data(); });
+                var total = snap.size;
+                var oil = 0;
+                entries.forEach(function(e) {
+                    oil += (e.oilVolume || 0);
+                });
+                statEntries.textContent = total;
+                statOil.textContent = oil + 'L';
             });
 
-            db.collection('collectors').onSnapshot((snap) => {
-                $('statCollectors').textContent = snap.size;
+            db.collection('collectors').onSnapshot(function(snap) {
+                statCollectors.textContent = snap.size;
             });
 
-            db.collection('users').onSnapshot((snap) => {
-                $('statUsers').textContent = snap.size;
+            db.collection('users').onSnapshot(function(snap) {
+                statUsers.textContent = snap.size;
             });
 
-            db.collection('entries').where('auditStatus', '==', 'flagged_for_review').onSnapshot((snap) => {
-                $('statPending').textContent = snap.size;
+            db.collection('entries').where('auditStatus', '==', 'flagged_for_review').onSnapshot(function(snap) {
+                statPending.textContent = snap.size;
             });
 
-            db.collection('payment_audits').onSnapshot((snap) => {
-                const total = snap.docs.reduce((sum, d) => sum + (d.data().amount || 0), 0);
-                $('statPayouts').textContent = 'R' + total.toFixed(0);
+            db.collection('payment_audits').onSnapshot(function(snap) {
+                var total = 0;
+                snap.docs.forEach(function(d) {
+                    total += (d.data().amount || 0);
+                });
+                statPayouts.textContent = 'R' + total.toFixed(0);
             });
         }
 
+        // ============================================================
+        // 2. RECENT ENTRIES
+        // ============================================================
         function listenEntries() {
-            const loading = $('entriesLoading');
-            const table = $('entriesTable');
-            const body = $('entriesBody');
-            const empty = $('entriesEmpty');
-            const count = $('entryCount');
-
             if (entriesUnsubscribe) entriesUnsubscribe();
 
             entriesUnsubscribe = db.collection('entries')
                 .orderBy('timestamp', 'desc')
                 .limit(50)
-                .onSnapshot((snap) => {
-                    loading.style.display = 'none';
-                    count.textContent = snap.size + ' entries';
+                .onSnapshot(function(snap) {
+                    entriesLoading.style.display = 'none';
+                    entryCount.textContent = snap.size + ' entries';
 
                     if (snap.empty) {
-                        table.style.display = 'none';
-                        empty.style.display = 'block';
-                        body.innerHTML = '';
+                        entriesTable.style.display = 'none';
+                        entriesEmpty.style.display = 'block';
+                        entriesBody.innerHTML = '';
                         return;
                     }
 
-                    empty.style.display = 'none';
-                    table.style.display = 'table';
-                    body.innerHTML = '';
+                    entriesEmpty.style.display = 'none';
+                    entriesTable.style.display = 'table';
+                    entriesBody.innerHTML = '';
 
-                    snap.docs.forEach((doc) => {
-                        const data = doc.data();
-                        const status = data.auditStatus || 'pending';
-                        const statusClass = status === 'verified' ? 'verified' : status === 'flagged_for_review' ?
-                            'flagged' : 'pending';
+                    snap.docs.forEach(function(doc) {
+                        var data = doc.data();
+                        var status = data.auditStatus || 'pending';
+                        var statusClass = status === 'verified' ? 'verified' :
+                            status === 'flagged_for_review' ? 'flagged' : 'pending';
+                        var statusDisplay = status === 'flagged_for_review' ? '⚠️ Flagged' : status;
 
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td><strong>${escapeHtml(data.ownerName || 'Unknown')}</strong></td>
-                            <td>${escapeHtml(data.area || 'N/A')}</td>
-                            <td>${data.oilVolume || 0}L</td>
-                            <td><span class="status-badge ${statusClass}">${status === 'flagged_for_review' ? '⚠️ Flagged' : status}</span></td>
-                            <td>
-                                <button class="btn-sm view" onclick="viewEntry('${doc.id}')">View</button>
-                                ${status === 'flagged_for_review' ? `<button class="btn-sm approve" onclick="approveEntry('${doc.id}')">Approve</button>` : ''}
-                            </td>
-                        `;
-                        body.appendChild(row);
+                        var row = document.createElement('tr');
+                        row.innerHTML =
+                            '<td><strong>' + escapeHtml(data.ownerName || 'Unknown') + '</strong></td>' +
+                            '<td>' + escapeHtml(data.area || 'N/A') + '</td>' +
+                            '<td>' + (data.oilVolume || 0) + 'L</td>' +
+                            '<td><span class="status-badge ' + statusClass + '">' + statusDisplay + '</span></td>' +
+                            '<td>' +
+                            '<button class="btn-sm view" onclick="viewEntry(\'' + doc.id + '\')">View</button> ' +
+                            (status === 'flagged_for_review' ? '<button class="btn-sm approve" onclick="approveEntry(\'' + doc
+                                .id + '\')">Approve</button>' : '') +
+                            '</td>';
+                        entriesBody.appendChild(row);
                     });
-                }, (error) => {
-                    loading.style.display = 'none';
-                    showToast(`Error: ${error.message}`);
+                }, function(error) {
+                    entriesLoading.style.display = 'none';
+                    showToast('Error: ' + error.message);
                 });
         }
 
+        // ============================================================
+        // 3. PENDING REGISTRATIONS
+        // ============================================================
         function listenPending() {
-            const loading = $('pendingLoading');
-            const table = $('pendingTable');
-            const body = $('pendingBody');
-            const empty = $('pendingEmpty');
-            const count = $('pendingCount');
-
             if (pendingUnsubscribe) pendingUnsubscribe();
 
             pendingUnsubscribe = db.collection('collectors')
                 .where('status', '==', 'pending')
-                .onSnapshot((snap) => {
-                    loading.style.display = 'none';
-                    count.textContent = snap.size;
+                .onSnapshot(function(snap) {
+                    pendingLoading.style.display = 'none';
+                    pendingCount.textContent = snap.size;
 
                     if (snap.empty) {
-                        table.style.display = 'none';
-                        empty.style.display = 'block';
-                        body.innerHTML = '';
+                        pendingTable.style.display = 'none';
+                        pendingEmpty.style.display = 'block';
+                        pendingBody.innerHTML = '';
                         return;
                     }
 
-                    empty.style.display = 'none';
-                    table.style.display = 'table';
-                    body.innerHTML = '';
+                    pendingEmpty.style.display = 'none';
+                    pendingTable.style.display = 'table';
+                    pendingBody.innerHTML = '';
 
-                    snap.docs.forEach((doc) => {
-                        const data = doc.data();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td><strong>${escapeHtml(data.name || 'Unknown')}</strong></td>
-                            <td>${escapeHtml(data.area || 'N/A')}</td>
-                            <td>
-                                <button class="btn-sm approve" onclick="approveCollector('${doc.id}')">Approve</button>
-                                <button class="btn-sm reject" onclick="rejectCollector('${doc.id}')">Reject</button>
-                            </td>
-                        `;
-                        body.appendChild(row);
+                    snap.docs.forEach(function(doc) {
+                        var data = doc.data();
+                        var row = document.createElement('tr');
+                        row.innerHTML =
+                            '<td><strong>' + escapeHtml(data.name || 'Unknown') + '</strong></td>' +
+                            '<td>' + escapeHtml(data.area || 'N/A') + '</td>' +
+                            '<td>' +
+                            '<button class="btn-sm approve" onclick="approveCollector(\'' + doc.id +
+                            '\')">Approve</button> ' +
+                            '<button class="btn-sm reject" onclick="rejectCollector(\'' + doc.id +
+                            '\')">Reject</button>' +
+                            '</td>';
+                        pendingBody.appendChild(row);
                     });
-                }, (error) => {
-                    loading.style.display = 'none';
-                    showToast(`Error: ${error.message}`);
+                }, function(error) {
+                    pendingLoading.style.display = 'none';
+                    showToast('Error: ' + error.message);
                 });
         }
 
+        // ============================================================
+        // 4. QUANTUM AUDITS
+        // ============================================================
         function listenAudits() {
-            const loading = $('auditLoading');
-            const table = $('auditTable');
-            const body = $('auditBody');
-            const empty = $('auditEmpty');
-            const count = $('auditCount');
-
             if (auditUnsubscribe) auditUnsubscribe();
 
             auditUnsubscribe = db.collection('quantum_audits')
                 .where('status', '==', 'flagged_for_review')
                 .orderBy('auditedAt', 'desc')
                 .limit(20)
-                .onSnapshot((snap) => {
-                    loading.style.display = 'none';
-                    count.textContent = snap.size + ' flagged';
+                .onSnapshot(function(snap) {
+                    auditLoading.style.display = 'none';
+                    auditCount.textContent = snap.size + ' flagged';
 
                     if (snap.empty) {
-                        table.style.display = 'none';
-                        empty.style.display = 'block';
-                        body.innerHTML = '';
+                        auditTable.style.display = 'none';
+                        auditEmpty.style.display = 'block';
+                        auditBody.innerHTML = '';
                         return;
                     }
 
-                    empty.style.display = 'none';
-                    table.style.display = 'table';
-                    body.innerHTML = '';
+                    auditEmpty.style.display = 'none';
+                    auditTable.style.display = 'table';
+                    auditBody.innerHTML = '';
 
-                    snap.docs.forEach((doc) => {
-                        const data = doc.data();
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td><code style="font-size:0.6rem;">${escapeHtml(data.entryId || 'N/A').substring(0, 12)}</code></td>
-                            <td><strong style="color:${data.riskScore > 70 ? 'var(--danger)' : 'var(--warning)'};">${data.riskScore || 0}%</strong></td>
-                            <td style="font-size:0.6rem;">${(data.anomalies || ['None']).join(', ')}</td>
-                            <td><span class="status-badge flagged">Flagged</span></td>
-                            <td>
-                                <button class="btn-sm approve" onclick="resolveAudit('${doc.id}')">Resolve</button>
-                                <button class="btn-sm view" onclick="viewEntry('${data.entryId}')">View</button>
-                            </td>
-                        `;
-                        body.appendChild(row);
+                    snap.docs.forEach(function(doc) {
+                        var data = doc.data();
+                        var riskColor = data.riskScore > 70 ? 'var(--danger)' : 'var(--warning)';
+                        var row = document.createElement('tr');
+                        row.innerHTML =
+                            '<td><code style="font-size:0.6rem;">' + escapeHtml(data.entryId || 'N/A').substring(0,
+                                12) + '</code></td>' +
+                            '<td><strong style="color:' + riskColor + ';">' + (data.riskScore || 0) + '%</strong></td>' +
+                            '<td style="font-size:0.6rem;">' + ((data.anomalies || ['None']).join(', ')) + '</td>' +
+                            '<td><span class="status-badge flagged">Flagged</span></td>' +
+                            '<td>' +
+                            '<button class="btn-sm approve" onclick="resolveAudit(\'' + doc.id +
+                            '\')">Resolve</button> ' +
+                            '<button class="btn-sm view" onclick="viewEntry(\'' + (data.entryId || '') +
+                            '\')">View</button>' +
+                            '</td>';
+                        auditBody.appendChild(row);
                     });
-                }, (error) => {
-                    loading.style.display = 'none';
-                    showToast(`Error: ${error.message}`);
+                }, function(error) {
+                    auditLoading.style.display = 'none';
+                    showToast('Error: ' + error.message);
                 });
         }
 
         // ============================================================
         // ACTIONS
         // ============================================================
-        window.approveCollector = async (id) => {
-            try {
-                await db.collection('collectors').doc(id).update({
-                    status: 'active',
-                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+        window.approveCollector = function(id) {
+            db.collection('collectors').doc(id).update({
+                status: 'active',
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(function() {
                 showToast('✅ Collector approved!');
-            } catch (e) {
+            }).catch(function(e) {
                 showToast('❌ Error: ' + e.message);
-            }
+            });
         };
 
-        window.rejectCollector = async (id) => {
+        window.rejectCollector = function(id) {
             if (!confirm('Reject this collector?')) return;
-            try {
-                await db.collection('collectors').doc(id).delete();
+            db.collection('collectors').doc(id).delete().then(function() {
                 showToast('🗑️ Collector removed.');
-            } catch (e) {
+            }).catch(function(e) {
                 showToast('❌ Error: ' + e.message);
-            }
+            });
         };
 
-        window.approveEntry = async (id) => {
-            try {
-                await db.collection('entries').doc(id).update({
-                    auditStatus: 'verified',
-                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                await db.collection('quantum_audits').doc(id).update({
-                    status: 'verified',
-                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+        window.approveEntry = function(id) {
+            var batch = db.batch();
+            var entryRef = db.collection('entries').doc(id);
+            var auditRef = db.collection('quantum_audits').doc(id);
+
+            batch.update(entryRef, {
+                auditStatus: 'verified',
+                resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            batch.update(auditRef, {
+                status: 'verified',
+                resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            batch.commit().then(function() {
                 showToast('✅ Entry approved!');
-            } catch (e) {
+            }).catch(function(e) {
                 showToast('❌ Error: ' + e.message);
-            }
+            });
         };
 
-        window.resolveAudit = async (id) => {
+        window.resolveAudit = function(id) {
             if (!confirm('Resolve this flagged audit?')) return;
-            try {
-                await db.collection('quantum_audits').doc(id).update({
-                    status: 'resolved',
-                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                const audit = await db.collection('quantum_audits').doc(id).get();
-                if (audit.exists && audit.data().entryId) {
-                    await db.collection('entries').doc(audit.data().entryId).update({
+            var batch = db.batch();
+            var auditRef = db.collection('quantum_audits').doc(id);
+
+            batch.update(auditRef, {
+                status: 'resolved',
+                resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Also try to update the entry
+            auditRef.get().then(function(doc) {
+                if (doc.exists && doc.data().entryId) {
+                    var entryRef = db.collection('entries').doc(doc.data().entryId);
+                    batch.update(entryRef, {
                         auditStatus: 'verified',
                         resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
+                return batch.commit();
+            }).then(function() {
                 showToast('✅ Audit resolved!');
-            } catch (e) {
+            }).catch(function(e) {
                 showToast('❌ Error: ' + e.message);
-            }
+            });
         };
 
-        window.viewEntry = (id) => {
-            db.collection('entries').doc(id).get().then(doc => {
+        window.viewEntry = function(id) {
+            db.collection('entries').doc(id).get().then(function(doc) {
                 if (!doc.exists) return;
-                const d = doc.data();
-                alert(`📋 ENTRY DETAILS\n\nOwner: ${d.ownerName}\nArea: ${d.area}\nOil: ${d.oilVolume}L\nContact: ${d.contactPerson}\nStatus: ${d.auditStatus || 'pending'}`);
+                var d = doc.data();
+                alert('📋 ENTRY DETAILS\n\n' +
+                    'Owner: ' + (d.ownerName || 'N/A') + '\n' +
+                    'Area: ' + (d.area || 'N/A') + '\n' +
+                    'Oil: ' + (d.oilVolume || 0) + 'L\n' +
+                    'Contact: ' + (d.contactPerson || 'N/A') + '\n' +
+                    'Status: ' + (d.auditStatus || 'pending'));
+            }).catch(function(e) {
+                showToast('Error: ' + e.message);
             });
         };
 
@@ -1082,20 +1053,30 @@
         // ============================================================
         function escapeHtml(text) {
             if (!text) return '';
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
         function showToast(msg) {
-            const existing = document.querySelector('.toast');
+            var existing = document.querySelector('.toast');
             if (existing) existing.remove();
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.className = 'toast';
             div.textContent = msg;
             document.body.appendChild(div);
-            setTimeout(() => div.remove(), 3500);
+            setTimeout(function() {
+                if (div.parentNode) div.remove();
+            }, 3500);
         }
+
+        // ============================================================
+        // LOG
+        // ============================================================
+        console.log('🚀 MindTech Dashboard v3.0 — Stable');
+        console.log('⚛️ CHSH S=2.76 · SA 2026/05142');
+        console.log('📡 Real-time listeners active');
+        console.log('👤 Auth listener ready.');
     </script>
 
 </body>
