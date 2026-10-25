@@ -8,18 +8,17 @@
     <!-- Inline favicon (no 404) -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚛️</text></svg>">
 
-    <!-- ===== FONTS & ICONS ===== -->
+    <!-- FONTS & ICONS -->
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-    <!-- ===== FIREBASE SDKs ===== -->
+    <!-- FIREBASE SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        /* ... ALL YOUR EXISTING CSS ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --primary: #00B4D8; --primary-dark: #0096C7; --secondary: #00F5D4; --quantum: #8A2BE2;
@@ -43,7 +42,6 @@
         .header-text { flex: 1; }
         .header-text h1 { font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--pelo-gold), var(--pelo-green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .header-text p { font-size: 0.5rem; color: var(--text-secondary); letter-spacing: 2px; font-family: var(--font-mono); }
-        .header-badge { font-size: 0.55rem; background: rgba(0, 255, 136, 0.06); border: 1px solid rgba(0, 255, 136, 0.1); border-radius: 20px; padding: 4px 14px; color: var(--success); font-family: var(--font-mono); white-space: nowrap; flex-shrink: 0; }
         .header-user { display: flex; align-items: center; gap: 10px; font-size: 0.65rem; color: var(--text-secondary); flex-wrap: wrap; }
         .btn-logout { background: rgba(239, 71, 111, 0.15); border: 1px solid rgba(239, 71, 111, 0.2); color: var(--danger); padding: 6px 14px; border-radius: 30px; cursor: pointer; font-family: var(--font-exo); font-size: 0.6rem; transition: all 0.3s; }
         .btn-logout:hover { background: rgba(239, 71, 111, 0.25); }
@@ -103,13 +101,10 @@
         .handshake-badge.unreachable { border-color: var(--danger); color: var(--danger); background: rgba(239, 71, 111, 0.08); }
     </style>
 </head>
-
 <body>
 
-    <!-- ===== MAIN APP ===== -->
     <div class="container" id="app">
-
-        <!-- ===== HEADER ===== -->
+        <!-- HEADER -->
         <header class="header">
             <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO Recovery Centre" class="header-logo" onerror="this.src='https://i.postimg.cc/T114NczG/pelo-recovery-image-removebg-preview.png'" />
             <div class="header-text">
@@ -124,7 +119,7 @@
             </div>
         </header>
 
-        <!-- ===== STATS ===== -->
+        <!-- STATS -->
         <section class="stats-grid" id="statsGrid">
             <div class="stat-card"><div class="number" id="statEntries">0</div><div class="label">Total Entries</div></div>
             <div class="stat-card"><div class="number" id="statCollectors">0</div><div class="label">Collectors</div></div>
@@ -134,7 +129,7 @@
             <div class="stat-card"><div class="number" id="statUsers">0</div><div class="label">Registered Users</div></div>
         </section>
 
-        <!-- ===== ACTION BUTTONS ===== -->
+        <!-- ACTION BUTTONS -->
         <div class="action-row">
             <button class="btn-secondary" onclick="window.location.href='/index.html'"><i class="fas fa-arrow-left"></i> Back to App</button>
             <button class="btn-secondary" onclick="document.getElementById('tab-entries').click();"><i class="fas fa-list-ul"></i> View Entries</button>
@@ -143,14 +138,14 @@
             <button class="btn-secondary" onclick="location.reload();"><i class="fas fa-sync-alt"></i> Refresh</button>
         </div>
 
-        <!-- ===== TAB SYSTEM ===== -->
+        <!-- TAB SYSTEM -->
         <div class="tab-bar">
             <button class="tab-btn active" data-tab="tab-entries"><i class="fas fa-list-ul"></i> Recent Entries</button>
             <button class="tab-btn" data-tab="tab-pending"><i class="fas fa-user-plus"></i> Pending Registrations</button>
             <button class="tab-btn" data-tab="tab-audits"><i class="fas fa-shield-alt"></i> Quantum Audit</button>
         </div>
 
-        <!-- ===== TAB 1: RECENT ENTRIES ===== -->
+        <!-- TAB 1: RECENT ENTRIES -->
         <div id="tab-entries" class="glass-card tab-content active">
             <div class="card-header">
                 <i class="fas fa-list-ul"></i>
@@ -170,7 +165,7 @@
             </div>
         </div>
 
-        <!-- ===== TAB 2: PENDING REGISTRATIONS ===== -->
+        <!-- TAB 2: PENDING REGISTRATIONS -->
         <div id="tab-pending" class="glass-card tab-content">
             <div class="card-header">
                 <i class="fas fa-user-plus"></i>
@@ -190,7 +185,7 @@
             </div>
         </div>
 
-        <!-- ===== TAB 3: QUANTUM AUDIT ===== -->
+        <!-- TAB 3: QUANTUM AUDIT -->
         <div id="tab-audits" class="glass-card tab-content">
             <div class="card-header">
                 <i class="fas fa-shield-alt"></i>
@@ -210,7 +205,7 @@
             </div>
         </div>
 
-        <!-- ===== FOOTER ===== -->
+        <!-- FOOTER -->
         <div class="footer">
             <div class="footer-logos">
                 <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO Recovery" class="footer-logo" onerror="this.style.display='none'" />
@@ -220,17 +215,20 @@
             <div class="quantum-line">⚛️ CHSH S=2.76 · SA 2026/05142</div>
             <div class="copyright">© 2026 PELO Recovery · Powered by MindTech Industries · All data flows to mindtech.industriesai@gmail.com</div>
         </div>
-
     </div>
 
     <!-- ============================================================ -->
-    <!-- DEFENSIVE HANDSHAKE — DIRECT FETCH -->
+    <!-- DEFENSIVE HANDSHAKE — DIRECT FETCH, DOMREADY WRAPPED -->
     <!-- ============================================================ -->
     <script>
-        (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Handshake] Script loaded, waiting for DOM...');
             const badge = document.getElementById('handshakeBadge');
-            if (!badge) return;
-
+            if (!badge) {
+                console.error('[Handshake] ❌ #handshakeBadge not found in DOM');
+                return;
+            }
+            console.log('[Handshake] Badge found, starting fetch...');
             badge.className = 'handshake-badge';
             badge.innerHTML = '<i class="fas fa-satellite-dish"></i> Handshake: Pending...';
 
@@ -241,7 +239,9 @@
                             method: 'GET',
                             signal: AbortSignal.timeout(5000)
                         });
-                    } catch (e) {}
+                    } catch (e) {
+                        console.log('[Handshake] Warm-up sent (cold start)');
+                    }
 
                     const res = await fetch('https://pelo-complete.onrender.com/api/v1/verify/chsh', {
                         method: 'GET',
@@ -265,14 +265,13 @@
                     badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Handshake: UNREACHABLE';
                 }
             })();
-        })();
+        });
     </script>
 
     <!-- ============================================================ -->
-    <!-- FIREBASE + DASHBOARD LOGIC (UNCHANGED) -->
+    <!-- FIREBASE + DASHBOARD LOGIC -->
     <!-- ============================================================ -->
     <script>
-        // FIREBASE CONFIG
         var firebaseConfig = {
             apiKey: "AIzaSyD5OB59lG6bAsmQ7A97zXP_MfQ5AM3BYaw",
             authDomain: "mindflow-ai-education.firebaseapp.com",
@@ -286,7 +285,6 @@
         var auth = firebase.auth();
         var db = firebase.firestore();
 
-        // DOM REFS
         var userNameDisplay = document.getElementById('userNameDisplay');
         var logoutBtn = document.getElementById('logoutBtn');
         var statEntries = document.getElementById('statEntries');
@@ -314,7 +312,6 @@
         var pendingUnsubscribe = null;
         var auditUnsubscribe = null;
 
-        // AUTH
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 userNameDisplay.textContent = user.displayName || user.email || 'Admin';
@@ -332,7 +329,6 @@
             window.location.href = '/index.html';
         });
 
-        // TABS
         document.querySelectorAll('.tab-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -342,7 +338,6 @@
             });
         });
 
-        // START LISTENERS
         function startListening() {
             listenStats();
             listenEntries();
@@ -350,7 +345,6 @@
             listenAudits();
         }
 
-        // 1. STATS
         function listenStats() {
             db.collection('entries').onSnapshot(function(snap) {
                 var entries = snap.docs.map(function(d) { return d.data(); });
@@ -370,7 +364,6 @@
             });
         }
 
-        // 2. RECENT ENTRIES
         function listenEntries() {
             if (entriesUnsubscribe) entriesUnsubscribe();
             entriesUnsubscribe = db.collection('entries').orderBy('timestamp', 'desc').limit(50).onSnapshot(function(snap) {
@@ -406,7 +399,6 @@
             });
         }
 
-        // 3. PENDING REGISTRATIONS
         function listenPending() {
             if (pendingUnsubscribe) pendingUnsubscribe();
             pendingUnsubscribe = db.collection('collectors').where('status', '==', 'pending').onSnapshot(function(snap) {
@@ -436,7 +428,6 @@
             });
         }
 
-        // 4. QUANTUM AUDITS
         function listenAudits() {
             if (auditUnsubscribe) auditUnsubscribe();
             auditUnsubscribe = db.collection('quantum_audits').where('status', '==', 'flagged_for_review').orderBy('auditedAt', 'desc').limit(20).onSnapshot(function(snap) {
@@ -469,7 +460,6 @@
             });
         }
 
-        // ACTIONS
         window.approveCollector = function(id) {
             db.collection('collectors').doc(id).update({ status: 'active', approvedAt: firebase.firestore.FieldValue.serverTimestamp() })
             .then(function() { showToast('✅ Collector approved!'); })
@@ -517,7 +507,6 @@
             }).catch(function(e) { showToast('Error: ' + e.message); });
         };
 
-        // UTILITIES
         function escapeHtml(text) {
             if (!text) return '';
             var div = document.createElement('div');
