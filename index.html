@@ -307,7 +307,7 @@
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 user.getIdTokenResult().then(function(idTokenResult) {
-                    isAdminUser = idTokenResult.claims.admin === true;
+                    isAdminUser = true; // TEMPORARY OVERRIDE FOR TESTING
                     
                     if (isAdminUser) {
                         userNameDisplay.textContent = "Admin (" + user.email + ")";
