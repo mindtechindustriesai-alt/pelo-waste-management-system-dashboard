@@ -17,6 +17,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <!-- PDF GENERATOR (jsPDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -56,6 +59,8 @@
         .btn-sm.reject:hover { background: rgba(239, 71, 111, 0.2); }
         .btn-sm.view { background: rgba(0, 180, 216, 0.1); color: var(--primary); }
         .btn-sm.view:hover { background: rgba(0, 180, 216, 0.2); }
+        .btn-sm.certify { background: rgba(200, 164, 80, 0.15); color: var(--pelo-gold); border: 1px solid rgba(200, 164, 80, 0.3); }
+        .btn-sm.certify:hover { background: rgba(200, 164, 80, 0.3); }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
         .stat-card { background: rgba(15, 25, 45, 0.30); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px 20px; text-align: center; transition: all 0.3s; }
         .stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
@@ -389,7 +394,8 @@
                         '<td>' + (data.oilVolume || 0) + 'L</td>' +
                         '<td><span class="status-badge ' + statusClass + '">' + statusDisplay + '</span></td>' +
                         '<td><button class="btn-sm view" onclick="viewEntry(\'' + doc.id + '\')">View</button> ' +
-                        (status === 'flagged_for_review' ? '<button class="btn-sm approve" onclick="approveEntry(\'' + doc.id + '\')">Approve</button>' : '') +
+                        '<button class="btn-sm certify" onclick="generateCertificate(\'' + doc.id + '\')"><i class="fas fa-file-signature"></i> Certify</button>' +
+                        (status === 'flagged_for_review' ? ' <button class="btn-sm approve" onclick="approveEntry(\'' + doc.id + '\')">Approve</button>' : '') +
                         '</td>';
                     entriesBody.appendChild(row);
                 });
@@ -505,6 +511,108 @@
                 var d = doc.data();
                 alert('📋 ENTRY DETAILS\n\nOwner: ' + (d.ownerName || 'N/A') + '\nArea: ' + (d.area || 'N/A') + '\nOil: ' + (d.oilVolume || 0) + 'L\nContact: ' + (d.contactPerson || 'N/A') + '\nStatus: ' + (d.auditStatus || 'pending'));
             }).catch(function(e) { showToast('Error: ' + e.message); });
+        };
+
+        // ============================================================
+        // CERTIFICATE GENERATOR (The Fix)
+        // ============================================================
+        window.generateCertificate = async function(entryId) {
+            try {
+                // 1. Fetch the entry data from Firestore
+                const doc = await db.collection('entries').doc(entryId).get();
+                if (!doc.exists) { showToast('❌ Entry not found.', 'error'); return; }
+                
+                const entryData = doc.data();
+                showToast('⏳ Generating SHA-256 Hash...', 'info');
+
+                // 2. Package the data into a JSON object
+                const certificateData = {
+                    entryId: entryId,
+                    ownerName: entryData.ownerName || 'Unknown',
+                    area: entryData.area || 'N/A',
+                    oilVolume: entryData.oilVolume || 0,
+                    timestamp: entryData.timestamp || new Date().toISOString(),
+                    chsh_s: '2.76',
+                    patent: 'SA 2026/05142'
+                };
+
+                // 3. Generate the SHA-256 Hash
+                const dataString = JSON.stringify(certificateData);
+                const msgBuffer = new TextEncoder().encode(dataString);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                showToast('⏳ Calling IBM Quantum Anchor...', 'info');
+
+                // 4. Call the Attestation API
+                const response = await fetch('https://pelo-complete.onrender.com/api/v1/attest/certificate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ certificate_hash: hashHex })
+                });
+
+                if (!response.ok) throw new Error('Quantum Anchor failed');
+                const quantumReceipt = await response.json();
+
+                // 5. Save the certificate to Firestore
+                await db.collection('certificates').add({
+                    ...certificateData,
+                    hash: hashHex,
+                    quantum_receipt: quantumReceipt,
+                    generatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 6. Generate PDF using jsPDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                
+                // Header
+                pdf.setFontSize(22);
+                pdf.setTextColor(200, 164, 80);
+                pdf.text("Certificate of Destruction", 20, 30);
+                
+                pdf.setFontSize(10);
+                pdf.setTextColor(100);
+                pdf.text("Powered by MindTech Industries · Quantum Verified", 20, 38);
+                
+                // Body
+                pdf.setFontSize(12);
+                pdf.setTextColor(0);
+                pdf.text("Entry ID: " + entryId, 20, 60);
+                pdf.text("Owner: " + (entryData.ownerName || 'N/A'), 20, 70);
+                pdf.text("Area: " + (entryData.area || 'N/A'), 20, 80);
+                pdf.text("Volume: " + (entryData.oilVolume || 0) + "L", 20, 90);
+                
+                // Quantum Proof
+                pdf.setFontSize(14);
+                pdf.setTextColor(0, 100, 200);
+                pdf.text("Quantum Attestation", 20, 115);
+                
+                pdf.setFontSize(10);
+                pdf.setTextColor(0);
+                pdf.text("CHSH S: " + quantumReceipt.quantum_anchor.chsh_s, 20, 125);
+                pdf.text("IBM Job ID: " + quantumReceipt.quantum_anchor.ibm_job_id, 20, 132);
+                pdf.text("Hardware: " + quantumReceipt.quantum_anchor.hardware, 20, 139);
+                pdf.text("Signature: " + quantumReceipt.attestation_signature, 20, 146);
+                
+                // Verification Footer
+                pdf.setFontSize(10);
+                pdf.setTextColor(100);
+                pdf.text("Verify this certificate at:", 20, 170);
+                pdf.setTextColor(0, 100, 200);
+                pdf.text("https://pelo-verify-portal.onrender.com", 20, 177);
+                pdf.text("Hash: " + hashHex, 20, 184);
+
+                // Save PDF
+                pdf.save(`Certificate_${entryId}.pdf`);
+
+                showToast('✅ Certificate generated and downloaded!', 'success');
+
+            } catch (error) {
+                console.error(error);
+                showToast('❌ Error generating certificate: ' + error.message, 'error');
+            }
         };
 
         function escapeHtml(text) {
