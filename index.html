@@ -2,255 +2,180 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>MindTech Driver Command</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PELO Waste Management Dashboard</title>
 
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
   <style>
     :root {
-      --bg-dark: #030712; --card-bg: rgba(15, 23, 42, 0.75); --card-border: rgba(56, 189, 248, 0.15);
-      --input-bg: rgba(30, 41, 59, 0.6); --accent-cyan: #38bdf8; --accent-blue: #0284c7;
-      --accent-green: #10b981; --accent-amber: #f59e0b; --accent-rose: #f43f5e; --accent-purple: #a855f7;
-      --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b;
-      --radius-lg: 20px; --radius-md: 14px; --radius-sm: 8px; --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.05);
+      --bg-dark: #05080F; --card-bg: rgba(15, 23, 42, 0.75); --card-border: rgba(0, 180, 216, 0.15);
+      --accent-cyan: #00B4D8; --accent-blue: #0096C7; --accent-green: #00FF88;
+      --accent-amber: #FFD166; --accent-rose: #EF476F; --accent-purple: #8A2BE2;
+      --text-primary: #E8EDF5; --text-secondary: #8A99B0; --text-muted: #4A5A6A;
+      --radius-lg: 20px; --radius-md: 14px; --radius-sm: 8px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body { font-family: 'Exo 2', sans-serif; background: var(--bg-dark); background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 70%), radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.05) 0%, transparent 50%); color: var(--text-primary); min-height: 100vh; padding: 16px 12px; overflow-x: hidden; position: relative; }
-    body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 10% 20%, rgba(56, 189, 248, 0.15), transparent), radial-gradient(1px 1px at 30% 60%, rgba(168, 85, 247, 0.12), transparent), radial-gradient(1px 1px at 50% 80%, rgba(16, 185, 129, 0.10), transparent), radial-gradient(1px 1px at 70% 30%, rgba(56, 189, 248, 0.08), transparent), radial-gradient(1px 1px at 90% 70%, rgba(168, 85, 247, 0.10), transparent), radial-gradient(1px 1px at 15% 90%, rgba(16, 185, 129, 0.06), transparent), radial-gradient(1px 1px at 85% 10%, rgba(56, 189, 248, 0.12), transparent), radial-gradient(1px 1px at 45% 45%, rgba(168, 85, 247, 0.08), transparent); background-size: 200px 200px; pointer-events: none; z-index: 0; }
-    .container { max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
-    .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); margin-bottom: 16px; box-shadow: var(--shadow-glow); transition: all 0.3s ease; }
-    .header:hover { border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 0 40px rgba(56, 189, 248, 0.08); }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-logo { height: 32px; width: auto; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4)); transition: all 0.3s ease; }
-    .header-logo:hover { filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.6)); }
-    .header h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; background: linear-gradient(135deg, #fff 30%, var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Exo 2', sans-serif; }
-    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; transition: all 0.3s ease; }
-    .status-badge.online { background: rgba(16, 185, 129, 0.12); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
-    .status-badge.tracking { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.4); animation: pulse-glow 2s infinite; }
-    .status-badge.offline { background: rgba(244, 63, 94, 0.12); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
-    .status-badge.arriving { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); animation: pulse-glow-amber 0.8s infinite; }
-    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px rgba(56, 189, 248, 0.2); } 50% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.6); } }
-    @keyframes pulse-glow-amber { 0%, 100% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); } 50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); } }
-    .profile-card { background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow-glow); transition: all 0.3s ease; }
-    .profile-card:hover { border-color: rgba(56, 189, 248, 0.2); }
-    .profile-header { display: flex; align-items: center; gap: 12px; }
-    .profile-avatar { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #fff; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); flex-shrink: 0; transition: all 0.3s ease; }
-    .profile-avatar:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(2, 132, 199, 0.5); }
-    .profile-info h2 { font-size: 15px; font-weight: 700; font-family: 'Exo 2', sans-serif; }
-    .profile-info p { font-size: 12px; color: var(--text-secondary); margin-top: 2px; font-family: 'Exo 2', sans-serif; }
-    .driver-status { margin-top: 12px; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--radius-sm); background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; transition: all 0.3s ease; }
-    .status-dot.en-route { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); animation: pulse 1.5s infinite; }
-    .status-dot.arriving { background: var(--accent-amber); box-shadow: 0 0 10px var(--accent-amber); animation: pulse 0.4s infinite; }
-    .status-dot.completed { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-    .status-dot.offline { background: var(--accent-rose); }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
-    .job-card { background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; position: relative; overflow: hidden; box-shadow: var(--shadow-glow); transition: all 0.3s ease; }
-    .job-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); transition: all 0.3s ease; }
-    .job-card:hover { border-color: rgba(56, 189, 248, 0.2); }
-    .job-card .label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; font-family: 'Exo 2', sans-serif; }
-    .job-card .value { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Exo 2', sans-serif; }
-    .job-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-    .job-detail-item { background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.05); text-align: left; transition: all 0.3s ease; }
-    .job-detail-item:hover { border-color: rgba(56, 189, 248, 0.15); background: rgba(15, 23, 42, 0.8); }
-    .job-detail-item .label { font-size: 8px; }
-    .job-detail-item .value { font-size: 15px; font-weight: 800; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-    .tracking-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .btn { padding: 12px; border: none; border-radius: var(--radius-sm); font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Exo 2', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; position: relative; overflow: hidden; }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-    .btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
-    .btn:hover:not(:disabled)::after { opacity: 1; }
-    .btn-start { background: linear-gradient(135deg, var(--accent-green), #047857); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
-    .btn-start:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
-    .btn-stop { background: linear-gradient(135deg, var(--accent-rose), #b91c1c); color: #fff; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25); }
-    .btn-stop:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4); }
-    .btn-checkin { background: linear-gradient(135deg, var(--accent-amber), #b45309); color: #fff; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
-    .btn-checkin:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
-    .btn-complete { background: linear-gradient(135deg, var(--accent-purple), #6b21a8); color: #fff; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25); }
-    .btn-complete:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4); }
-    .btn:active:not(:disabled) { transform: scale(0.97); }
-    .alert-feed { background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 12px 16px; max-height: 140px; overflow-y: auto; box-shadow: var(--shadow-glow); }
-    .alert-feed::-webkit-scrollbar { width: 3px; }
-    .alert-feed::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-    .alert-feed::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 10px; }
-    .alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; animation: slideIn 0.3s ease; }
-    .alert-item:last-child { border-bottom: none; }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-    .alert-icon { font-size: 12px; margin-top: 1px; flex-shrink: 0; }
-    .alert-time { color: var(--text-muted); font-size: 9px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
-    .footer { text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--card-border); font-size: 10px; color: var(--text-muted); font-family: 'Exo 2', sans-serif; }
-    .footer .quantum { color: var(--accent-purple); font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.5px; }
-    .toast { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 28px); min-width: 0; background: #0f172a; color: var(--text-primary); padding: 12px 16px; border-radius: 18px; border: 1px solid var(--card-border); box-shadow: 0 10px 30px rgba(0,0,0,0.8); font-weight: 700; font-size: 13px; line-height: 1.4; z-index: 99999; text-align: center; white-space: normal; overflow-wrap: anywhere; word-break: break-word; animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Exo 2', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Exo 2', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; padding: 20px 15px; background-image: radial-gradient(circle at 50% 0%, rgba(0,180,216,0.08) 0%, transparent 70%); }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* HEADER */
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .header-left { display: flex; align-items: center; gap: 15px; }
+    .header-logo { height: 48px; width: auto; filter: drop-shadow(0 0 15px rgba(0,180,216,0.3)); }
+    .header-text h1 { font-size: 20px; font-weight: 800; background: linear-gradient(135deg, #fff, var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-text p { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; }
+    .header-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+    .badge { padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; }
+    .badge-quantum { background: rgba(138,43,226,0.15); color: var(--accent-purple); border: 1px solid rgba(138,43,226,0.3); font-family: 'JetBrains Mono', monospace; }
+    .handshake-badge { padding: 6px 14px; border-radius: 30px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', monospace; border: 1px solid var(--accent-amber); color: var(--accent-amber); background: rgba(255,209,102,0.08); transition: all 0.3s; }
+    .handshake-badge.confirmed { border-color: var(--accent-green); color: var(--accent-green); background: rgba(0,255,136,0.08); }
+    .handshake-badge.unreachable { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(239,71,111,0.08); }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px; text-align: center; transition: all 0.3s; }
+    .stat-card:hover { border-color: var(--accent-cyan); transform: translateY(-2px); }
+    .stat-value { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .stat-value.cyan { color: var(--accent-cyan); }
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.amber { color: var(--accent-amber); }
+    .stat-value.purple { color: var(--accent-purple); }
+    .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+    /* CONTENT GRID */
+    .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px; }
+    @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+
+    /* MAP */
+    .map-card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 20px; }
+    .map-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .map-card h3 i { color: var(--accent-cyan); }
+    #map { height: 350px; width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--card-border); }
+
+    /* MANIFEST TABLE */
+    .manifest-card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 20px; margin-top: 20px; }
+    .manifest-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .manifest-card h3 i { color: var(--accent-green); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 12px; color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--card-border); }
+    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:hover td { background: rgba(0,180,216,0.04); }
+    .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; display: inline-block; }
+    .status-pending { background: rgba(255,209,102,0.15); color: var(--accent-amber); }
+    .status-collected { background: rgba(0,255,136,0.15); color: var(--accent-green); }
+    .status-certified { background: rgba(138,43,226,0.15); color: var(--accent-purple); }
+
+    /* DRIVER LIST */
+    .driver-list { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 20px; }
+    .driver-list h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .driver-list h3 i { color: var(--accent-purple); }
+    .driver-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(30,41,59,0.3); border-radius: var(--radius-sm); margin-bottom: 6px; border-left: 3px solid var(--accent-purple); }
+    .driver-info h4 { font-size: 13px; font-weight: 600; }
+    .driver-info p { font-size: 11px; color: var(--text-muted); }
+    .driver-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+    .driver-status-dot.online { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+    .driver-status-dot.enroute { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); animation: pulse 1.5s infinite; }
+    .driver-status-dot.offline { background: var(--accent-rose); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #0f172a; color: var(--text-primary); padding: 14px 28px; border-radius: 30px; border: 1px solid var(--card-border); box-shadow: 0 10px 40px rgba(0,0,0,0.5); font-weight: 600; font-size: 13px; z-index: 99999; animation: slideUp 0.3s ease; }
     .toast.success { border-color: var(--accent-green); color: var(--accent-green); }
     .toast.error { border-color: var(--accent-rose); color: var(--accent-rose); }
-    .toast.warning { border-color: var(--accent-amber); color: var(--accent-amber); }
     @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-    @media (max-width: 480px) {
-      body { padding: 12px 10px calc(24px + env(safe-area-inset-bottom)); }
-      .toast { width: calc(100vw - 28px); max-width: calc(100vw - 28px); padding: 12px 14px; border-radius: 16px; font-size: 12px; }
-      .header { gap: 8px; padding: 10px 12px; }
-      .header-left { min-width: 0; gap: 8px; }
-      .header h1 { font-size: 14px; overflow-wrap: anywhere; }
-      .status-badge, .handshake-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: center; }
-      .profile-info { min-width: 0; }
-      .profile-info h2, .profile-info p { overflow-wrap: anywhere; }
-      .job-details { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-      .preview-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-      .btn { min-width: 0; white-space: normal; line-height: 1.25; }
-    }
-    .handshake-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; border: 1px solid var(--accent-amber); color: var(--accent-amber); background: rgba(245, 158, 11, 0.08); transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
-    .handshake-badge.confirmed { border-color: var(--accent-green); color: var(--accent-green); background: rgba(16, 185, 129, 0.08); }
-    .handshake-badge.unreachable { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(244, 63, 94, 0.08); }
 
-    /* PROOF SECTIONS */
-    .proof-card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; }
-    .proof-card .form-group { margin-bottom: 10px; }
-    .proof-card label { display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px; font-family: 'Exo 2', sans-serif; }
-    .proof-card input[type="number"] { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); color: white; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-
-    /* PREVIEW MODAL */
-    .preview-modal { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(8px); z-index: 99998; display: none; align-items: center; justify-content: center; padding: 16px; }
-    .preview-modal.active { display: flex; }
-    .preview-content { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 20px; max-width: 440px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
-    .preview-content h3 { font-size: 14px; margin-bottom: 12px; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; }
-    .preview-image-wrap { width: 100%; max-height: 55vh; overflow: hidden; border-radius: var(--radius-md); border: 1px solid var(--card-border); margin-bottom: 14px; background: #000; display: flex; align-items: center; justify-content: center; }
-    .preview-image-wrap img { max-width: 100%; max-height: 55vh; object-fit: contain; }
-    .preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .preview-actions .btn { padding: 12px; font-size: 12px; }
+    /* FOOTER */
+    .footer { text-align: center; margin-top: 30px; padding: 20px; border-top: 1px solid var(--card-border); }
+    .footer-logos { display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 12px; flex-wrap: wrap; }
+    .footer-logo { height: 36px; width: auto; opacity: 0.7; transition: all 0.3s; }
+    .footer-logo:hover { opacity: 1; transform: scale(1.05); }
+    .footer-quantum { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-purple); letter-spacing: 0.5px; }
+    .footer-copyright { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
   </style>
 </head>
 <body>
 
 <div class="container">
 
+  <!-- HEADER -->
   <header class="header">
     <div class="header-left">
       <img src="https://i.postimg.cc/zXW78GNH/Mind-Tech-Transparent-Logo.png" alt="MindTech" class="header-logo" onerror="this.style.display='none'">
-      <h1>DRIVER COMMAND</h1>
+      <div class="header-text">
+        <h1>PELO Waste Management Dashboard</h1>
+        <p>Real-Time Command Center · MindTech Industries</p>
+      </div>
     </div>
-    <span id="handshakeBadge" class="handshake-badge"><i class="fas fa-satellite-dish"></i> Handshake: Pending...</span>
-    <span class="status-badge offline" id="connectionStatus">Standby</span>
+    <div class="header-badges">
+      <div class="badge badge-quantum"><i class="fas fa-atom"></i> CHSH S=2.76</div>
+      <span id="handshakeBadge" class="handshake-badge"><i class="fas fa-satellite-dish"></i> Handshake: Pending...</span>
+    </div>
   </header>
 
-  <div class="profile-card">
-    <div class="profile-header">
-      <div class="profile-avatar" id="avatarInitials">TM</div>
-      <div class="profile-info">
-        <h2 id="driverName">Thabo Mokoena</h2>
-        <p id="driverPhone">📞 082 555 1234</p>
-        <p id="driverVehicle">🚗 Toyota Hilux (ZX 1234)</p>
-      </div>
-    </div>
-    <div class="driver-status">
-      <span class="status-dot offline" id="statusDot"></span>
-      <span id="statusText" style="font-size: 12px; font-weight: 700;">Offline</span>
-      <span style="margin-left:auto; font-size:10px; color:var(--text-muted); font-family: 'JetBrains Mono';" id="lastUpdateTime">—</span>
-    </div>
-  </div>
+  <!-- STATS -->
+  <section class="stats-grid">
+    <div class="stat-card"><div class="stat-value cyan" id="statTotal">0</div><div class="stat-label">Total Manifests</div></div>
+    <div class="stat-card"><div class="stat-value green" id="statCollected">0</div><div class="stat-label">Collected</div></div>
+    <div class="stat-card"><div class="stat-value amber" id="statPending">0</div><div class="stat-label">Pending</div></div>
+    <div class="stat-card"><div class="stat-value purple" id="statVolume">0 L</div><div class="stat-label">Total Volume</div></div>
+  </section>
 
-  <div class="job-card" id="jobCard">
-    <div class="label">📍 Active Pickup Target</div>
-    <div class="value" id="pickupLocation">Awaiting Assignment...</div>
-    <div class="job-details">
-      <div class="job-detail-item">
-        <div class="label">Distance</div>
-        <div class="value" id="distanceValue">—</div>
-      </div>
-      <div class="job-detail-item">
-        <div class="label">ETA</div>
-        <div class="value" id="etaValue">—</div>
+  <!-- MAP + DRIVER LIST -->
+  <div class="content-grid">
+    <div class="map-card">
+      <h3><i class="fas fa-map-marked-alt"></i> Live Site Map</h3>
+      <div id="map"></div>
+    </div>
+    <div class="driver-list">
+      <h3><i class="fas fa-truck"></i> Active Drivers</h3>
+      <div id="driverList">
+        <p style="color:var(--text-muted); font-size:13px; text-align:center; padding:15px 0;">Loading drivers...</p>
       </div>
     </div>
   </div>
 
-  <!-- PROOF: SOBRIETY SELFIE (FRONT CAMERA) -->
-  <div class="proof-card">
-    <div class="card-header" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-      <i class="fas fa-shield-alt" style="color: var(--accent-rose);"></i>
-      <h3 style="font-size: 0.9rem;">Sobriety Check</h3>
-    </div>
-    <p style="font-size: 0.65rem; color: var(--text-muted); margin-bottom:8px;">Front camera opens. Preview before save. No excuses.</p>
-    <input type="file" id="sobrietyPhotoInput" accept="image/*" capture="user" style="display: none;">
-    <button class="btn btn-start" onclick="document.getElementById('sobrietyPhotoInput').click()" style="width:100%; padding:10px; font-size:0.75rem;">
-        <i class="fas fa-camera"></i> Take Sobriety Selfie
-    </button>
-  </div>
-
-  <!-- PROOF: FUEL RECEIPT & ODOMETER (BACK CAMERA) -->
-  <div class="proof-card">
-    <div class="card-header" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-      <i class="fas fa-gas-pump" style="color: var(--accent-amber);"></i>
-      <h3 style="font-size: 0.9rem;">Fuel Stop Proof</h3>
-    </div>
-    <div class="form-group">
-      <label>Odometer Reading (km)</label>
-      <input type="number" id="odometerKm" placeholder="e.g. 145230">
-    </div>
-    <input type="file" id="fuelReceiptInput" accept="image/*" capture="environment" style="display: none;">
-    <button class="btn btn-checkin" onclick="document.getElementById('fuelReceiptInput').click()" style="width:100%; padding:10px; font-size:0.75rem;">
-        <i class="fas fa-camera"></i> Capture Fuel Receipt
-    </button>
-  </div>
-
-  <!-- PROOF: DELIVERY DOCUMENT (BACK CAMERA) -->
-  <div class="proof-card">
-    <div class="card-header" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-      <i class="fas fa-file-signature" style="color: var(--accent-green);"></i>
-      <h3 style="font-size: 0.9rem;">Delivery Document</h3>
-    </div>
-    <p style="font-size: 0.65rem; color: var(--text-muted); margin-bottom:8px;">Back camera opens. Preview the signed note before save.</p>
-    <input type="file" id="deliveryDocInput" accept="image/*" capture="environment" style="display: none;">
-    <button class="btn btn-complete" onclick="document.getElementById('deliveryDocInput').click()" style="width:100%; padding:10px; font-size:0.75rem;">
-        <i class="fas fa-camera"></i> Capture Delivery Note
-    </button>
-  </div>
-
-  <div class="tracking-controls">
-    <button class="btn btn-start" id="startBtn" onclick="startTracking()"><i class="fa-solid fa-play"></i> Start</button>
-    <button class="btn btn-stop" id="stopBtn" onclick="stopTracking()" disabled><i class="fa-solid fa-stop"></i> Stop</button>
-    <button class="btn btn-checkin" id="checkinBtn" onclick="checkIn()" disabled><i class="fa-solid fa-location-crosshairs"></i> Check-in</button>
-    <button class="btn btn-complete" id="completeBtn" onclick="completePickup()" disabled><i class="fa-solid fa-box-check"></i> Complete</button>
-  </div>
-
-  <div class="alert-feed" id="alertFeed">
-    <div style="color:var(--text-muted); font-size:11px; text-align:center; padding:8px 0;" id="emptyAlertMsg">
-      <i class="fa-regular fa-bell"></i> System telemetry operational
+  <!-- MANIFEST TABLE -->
+  <div class="manifest-card">
+    <h3><i class="fas fa-list-check"></i> Manifest Queue</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Manifest ID</th><th>Supplier</th><th>Material</th><th>Volume</th><th>Status</th><th>Certificate</th></tr>
+        </thead>
+        <tbody id="manifestBody">
+          <tr><td colspan="6" style="color:var(--text-muted); text-align:center; padding:20px;">Loading manifests...</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div class="footer">
-    <div class="quantum">⚛️ CHSH S=2.76 · SA 2026/05142</div>
-    <div style="margin-top:4px;">© 2026 MindTech Driver · Built in Africa, for Africa</div>
-  </div>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-logos">
+      <img src="https://i.postimg.cc/zXW78GNH/Mind-Tech-Transparent-Logo.png" alt="MindTech" class="footer-logo" onerror="this.style.display='none'">
+      <img src="https://i.postimg.cc/T3ytnBqN/KD-LOGO-IMAGE-removebg-preview.png" alt="KD Concepts" class="footer-logo" onerror="this.style.display='none'">
+      <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO" class="footer-logo" onerror="this.style.display='none'">
+    </div>
+    <div class="footer-quantum">⚛️ Canonical: S=2.76 (Kingston) · On-Demand: S=2.02 (Fez) · SA 2026/05142</div>
+    <div class="footer-copyright">© 2026 PELO Waste Management · Powered by MindTech Industries</div>
+  </footer>
 
 </div>
 
-<!-- PREVIEW MODAL -->
-<div class="preview-modal" id="previewModal">
-  <div class="preview-content">
-    <h3 id="previewTitle">Preview Photo</h3>
-    <div class="preview-image-wrap">
-      <img id="previewImage" alt="Preview">
-    </div>
-    <div class="preview-actions">
-      <button class="btn btn-stop" onclick="cancelPreview()"><i class="fas fa-redo"></i> Retake</button>
-      <button class="btn btn-start" onclick="confirmAndUpload()"><i class="fas fa-check"></i> Save & Upload</button>
-    </div>
-  </div>
-</div>
-
-<!-- HANDSHAKE — UPDATED URL AND CORRECT FIELD -->
+<!-- HANDSHAKE -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     const badge = document.getElementById('handshakeBadge');
@@ -267,8 +192,7 @@
         });
         if (res.ok) {
           const data = await res.json();
-          // FIX: Read the correct field from the backend response
-          const sValue = data.canonical_anchor ? data.canonical_anchor.chsh_s : (data.S || 2.76);
+          const sValue = data.canonical_anchor ? data.canonical_anchor.chsh_s : 2.76;
           badge.className = 'handshake-badge confirmed';
           badge.innerHTML = `<i class="fas fa-check-circle"></i> Handshake: CONFIRMED (S=${sValue})`;
         } else {
@@ -293,422 +217,112 @@
     messagingSenderId: "157615197603",
     appId: "1:157615197603:web:540d67781fc55d04c11e16"
   };
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-
-  // ============================================================
-  // AUTHENTICATION — INITIALIZATION IS GATED BY AUTH STATE
-  // ============================================================
-  const auth = firebase.auth();
-  let authReady = false;
-  let appInitializationStarted = false;
-  let authInitializationSignInInProgress = false;
-
+  firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  const storage = firebase.storage();
-  db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+  const auth = firebase.auth();
   db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
-  const DRIVER_ID = 'DRV-001';
-  let watchId = null;
-  let isTracking = false;
-  let driverData = null;
-  let manifestData = null;
-  let proximityTriggered = false;
-  let audioCtx = null;
+  let map = null;
+  const markers = [];
 
-  // Preview state
-  let pendingProof = null; // { file, proofType, previewURL }
-
-  const statusDot = document.getElementById('statusDot');
-  const statusText = document.getElementById('statusText');
-  const lastUpdateTime = document.getElementById('lastUpdateTime');
-  const pickupLocation = document.getElementById('pickupLocation');
-  const distanceValue = document.getElementById('distanceValue');
-  const etaValue = document.getElementById('etaValue');
-  const alertFeed = document.getElementById('alertFeed');
-  const connectionStatus = document.getElementById('connectionStatus');
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const checkinBtn = document.getElementById('checkinBtn');
-  const completeBtn = document.getElementById('completeBtn');
-  const previewModal = document.getElementById('previewModal');
-  const previewImage = document.getElementById('previewImage');
-  const previewTitle = document.getElementById('previewTitle');
-
-  function playProximityChirp() {
-    try {
-      if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-      if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.15);
-    } catch(e) { console.warn('Audio feedback blocked or unsupported:', e); }
+  function initMap() {
+    map = L.map('map').setView([-26.2041, 28.0473], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 19
+    }).addTo(map);
   }
 
-  async function loadDriverData() {
-    try {
-      const doc = await db.collection('drivers').doc(DRIVER_ID).get();
-      if (doc.exists) {
-        driverData = doc.data();
-        document.getElementById('driverName').textContent = driverData.name || 'Thabo Mokoena';
-        document.getElementById('driverPhone').textContent = '📞 ' + (driverData.phone || '082 555 1234');
-        document.getElementById('driverVehicle').textContent = '🚗 ' + (driverData.vehicle || 'Toyota Hilux (ZX 1234)');
-        const initials = (driverData.name || 'TM').split(' ').map(n => n[0]).join('').substring(0, 2);
-        document.getElementById('avatarInitials').textContent = initials;
-        if (driverData.manifestId) { await loadManifest(driverData.manifestId); }
-      } else {
-        const initialProfile = { driverId: DRIVER_ID, name: 'Thabo Mokoena', phone: '082 555 1234', vehicle: 'Toyota Hilux (ZX 1234)', status: 'OFFLINE', createdAt: new Date().toISOString(), quantumState: { chsh: 2.76, patent: 'SA 2026/05142' } };
-        await db.collection('drivers').doc(DRIVER_ID).set(initialProfile);
-        driverData = initialProfile;
-        document.getElementById('driverName').textContent = initialProfile.name;
-        document.getElementById('driverPhone').textContent = '📞 ' + initialProfile.phone;
-        document.getElementById('driverVehicle').textContent = '🚗 ' + initialProfile.vehicle;
-        document.getElementById('avatarInitials').textContent = 'TM';
-      }
-    } catch (err) { console.error('Load driver error:', err); showToast('⚠️ Driver profile load failed', 'error'); }
+  function listenToManifests() {
+    db.collection('pelo_master_ledger').orderBy('timestamp', 'desc').limit(50).onSnapshot(snapshot => {
+      const manifests = [];
+      snapshot.forEach(doc => manifests.push({ id: doc.id, ...doc.data() }));
+
+      document.getElementById('statTotal').textContent = manifests.length;
+      document.getElementById('statCollected').textContent = manifests.filter(m => m.status === 'COLLECTED' || m.status === 'certified').length;
+      document.getElementById('statPending').textContent = manifests.filter(m => m.status === 'STAGED' || !m.status).length;
+      const totalVolume = manifests.reduce((sum, m) => sum + (m.declaredQty || 0), 0);
+      document.getElementById('statVolume').textContent = totalVolume.toFixed(0) + ' L';
+
+      renderManifestTable(manifests);
+      updateMap(manifests);
+    }, err => console.warn('Manifest listener error:', err));
   }
 
-  function updateDriverStatus(status) {
-    const statusMap = {
-      'EN_ROUTE': { dot: 'en-route', text: 'EN ROUTE', color: 'var(--accent-cyan)' },
-      'ARRIVING': { dot: 'arriving', text: '🚨 ARRIVING NOW', color: 'var(--accent-amber)' },
-      'CHECKED_IN': { dot: 'en-route', text: '✅ CHECKED IN', color: 'var(--accent-green)' },
-      'COMPLETED': { dot: 'completed', text: '✅ COMPLETED', color: 'var(--accent-green)' },
-      'OFFLINE': { dot: 'offline', text: 'OFFLINE', color: 'var(--accent-rose)' }
-    };
-    const info = statusMap[status] || statusMap['OFFLINE'];
-    statusDot.className = 'status-dot ' + info.dot;
-    statusText.textContent = info.text;
-    statusText.style.color = info.color;
-    if (status === 'OFFLINE') { connectionStatus.textContent = 'Standby'; connectionStatus.className = 'status-badge offline'; }
-    else if (isTracking) { connectionStatus.textContent = 'GPS Active'; connectionStatus.className = 'status-badge tracking'; }
-    else { connectionStatus.textContent = 'Online'; connectionStatus.className = 'status-badge online'; }
-    checkinBtn.disabled = (status !== 'EN_ROUTE' && status !== 'ARRIVING') || !manifestData;
-    completeBtn.disabled = status !== 'CHECKED_IN';
-    db.collection('drivers').doc(DRIVER_ID).update({ status: status, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.error("Firestore status sync error:", err));
+  function renderManifestTable(manifests) {
+    const tbody = document.getElementById('manifestBody');
+    if (manifests.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-muted); text-align:center; padding:20px;">No manifests found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = manifests.slice(0, 20).map(m => {
+      let statusClass = 'status-pending', statusText = 'PENDING';
+      if (m.status === 'COLLECTED' || m.status === 'certified') { statusClass = 'status-collected'; statusText = 'COLLECTED'; }
+      if (m.certificate_hash) { statusClass = 'status-certified'; statusText = 'CERTIFIED'; }
+      return `
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent-cyan);">${m.manifestId || m.id}</td>
+          <td>${m.supplierName || m.companyName || 'Unknown'}</td>
+          <td>${m.materialType || 'N/A'}</td>
+          <td>${m.declaredQty || 0}</td>
+          <td><span class="status-tag ${statusClass}">${statusText}</span></td>
+          <td style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text-muted);">${m.certificate_hash ? m.certificate_hash.substring(0, 16) + '...' : '—'}</td>
+        </tr>
+      `;
+    }).join('');
   }
 
-  function startTracking() {
-    if (!navigator.geolocation) { showToast('⚠️ GPS hardware unavailable.', 'error'); return; }
-    if (isTracking) return;
-    if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    showToast('📍 Activating GPS telemetry...', 'warning');
-    watchId = navigator.geolocation.watchPosition(
-      position => {
-        const { latitude, longitude } = position.coords;
-        updateLocation(latitude, longitude);
-        if (!isTracking) { isTracking = true; startBtn.disabled = true; stopBtn.disabled = false; updateDriverStatus('EN_ROUTE'); showToast('✅ GPS Telemetry Active', 'success'); }
-      },
-      error => { console.error('GPS error:', error); showToast('⚠️ GPS Error: ' + error.message, 'error'); },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
-    );
-  }
-
-  function stopTracking() {
-    if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-    isTracking = false;
-    proximityTriggered = false;
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
-    updateDriverStatus('OFFLINE');
-    showToast('⏹️ GPS Telemetry Terminated', 'warning');
-  }
-
-  async function updateLocation(lat, lng) {
-    try {
-      const timestamp = new Date().toLocaleTimeString();
-      lastUpdateTime.textContent = timestamp;
-      await db.collection('drivers').doc(DRIVER_ID).update({ currentLat: lat, currentLng: lng, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
-      if (manifestData && manifestData.latitude && manifestData.longitude) {
-        const targetLat = parseFloat(manifestData.latitude);
-        const targetLng = parseFloat(manifestData.longitude);
-        if (!isNaN(targetLat) && !isNaN(targetLng)) {
-          const distance = calculateDistance(lat, lng, targetLat, targetLng);
-          distanceValue.textContent = distance < 1 ? Math.round(distance * 1000) + ' m' : distance.toFixed(2) + ' km';
-          const etaMinutes = Math.round((distance / 30) * 60);
-          etaValue.textContent = etaMinutes > 0 ? etaMinutes + ' min' : '< 1 min';
-          if (distance <= 0.1 && !proximityTriggered) {
-            proximityTriggered = true;
-            playProximityChirp();
-            const alertMsg = `${driverData.name} within 100m zone`;
-            addAlert(alertMsg, '🚨');
-            updateDriverStatus('ARRIVING');
-            showToast(`🚨 Approaching Pickup Point (<100m)`, 'warning');
-            if (driverData.manifestId) { db.collection('pelo_master_ledger').doc(driverData.manifestId).update({ proximityAlert: true, arrivingAt: new Date().toISOString() }).catch(e => console.error("Proximity sync error:", e)); }
-          }
+  function updateMap(manifests) {
+    markers.forEach(m => map.removeLayer(m));
+    markers.length = 0;
+    manifests.forEach(m => {
+      if (m.latitude && m.longitude) {
+        const lat = parseFloat(m.latitude);
+        const lng = parseFloat(m.longitude);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const marker = L.marker([lat, lng]).addTo(map);
+          marker.bindPopup(`<b>${m.supplierName || m.companyName || 'Site'}</b><br>${m.materialType || 'N/A'}<br>${m.declaredQty || 0} L`);
+          markers.push(marker);
         }
-      }
-    } catch (err) { console.error('Update location error:', err); }
-  }
-
-  function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  async function checkIn() {
-    if (!driverData || !manifestData) { showToast('⚠️ No active manifest assigned.', 'error'); return; }
-    try {
-      showToast('📋 Transmitting On-Site Status...', 'warning');
-      const now = new Date().toISOString();
-      await db.collection('drivers').doc(DRIVER_ID).update({ checkedInAt: now, status: 'CHECKED_IN' });
-      await db.collection('pelo_master_ledger').doc(driverData.manifestId).update({ status: 'CHECKED_IN', checkedInAt: now, driverCheckedIn: true });
-      updateDriverStatus('CHECKED_IN');
-      addAlert(`Driver checked in on-site`, '✅');
-      showToast('✅ Check-in Recorded Successfully', 'success');
-    } catch (err) { showToast('❌ Check-in failed: ' + err.message, 'error'); }
-  }
-
-  async function completePickup() {
-    if (!driverData || !manifestData) { showToast('⚠️ No active job to complete.', 'error'); return; }
-    try {
-      showToast('📦 Sealing manifest record...', 'warning');
-      const now = new Date().toISOString();
-      await db.collection('pelo_master_ledger').doc(driverData.manifestId).update({ status: 'COLLECTED', collectedAt: now, collectedBy: driverData.name, quantumState: { chsh: 2.76, patent: 'SA 2026/05142' } });
-      await db.collection('drivers').doc(DRIVER_ID).update({ completedAt: now, status: 'COMPLETED', manifestId: null });
-      updateDriverStatus('COMPLETED');
-      addAlert(`Collection completed by ${driverData.name}`, '📦');
-      showToast('✅ Collection Sealed! Ready for Gate Verification', 'success');
-      setTimeout(() => {
-        manifestData = null;
-        proximityTriggered = false;
-        pickupLocation.textContent = 'Awaiting Assignment...';
-        distanceValue.textContent = '—';
-        etaValue.textContent = '—';
-        updateDriverStatus('OFFLINE');
-        if (isTracking) stopTracking();
-      }, 4000);
-    } catch (err) { showToast('❌ Completion error: ' + err.message, 'error'); }
-  }
-
-  // ============================================================
-  // PROOF UPLOAD — PREVIEW BEFORE SAVE
-  // ============================================================
-  function openPreview(fileInputId, proofType) {
-    const input = document.getElementById(fileInputId);
-    const file = input.files[0];
-
-    if (!file) {
-      showToast('⚠️ No photo captured. Please try again.', 'warning');
-      return;
-    }
-
-    // Revoke any previous preview URL
-    if (pendingProof && pendingProof.previewURL) {
-      URL.revokeObjectURL(pendingProof.previewURL);
-    }
-
-    const previewURL = URL.createObjectURL(file);
-    pendingProof = { file, proofType, inputId: fileInputId, previewURL };
-
-    previewImage.src = previewURL;
-    previewTitle.textContent = `Preview: ${proofType}`;
-    previewModal.classList.add('active');
-
-    // Clear input so the same file can be re-selected if they retake
-    input.value = '';
-  }
-
-  function cancelPreview() {
-    previewModal.classList.remove('active');
-    if (pendingProof && pendingProof.previewURL) {
-      URL.revokeObjectURL(pendingProof.previewURL);
-    }
-    pendingProof = null;
-    previewImage.src = '';
-    showToast('🔄 Retake cancelled. Tap the button again.', 'warning');
-  }
-
-  async function confirmAndUpload() {
-    if (!pendingProof) {
-      showToast('⚠️ No photo to upload.', 'error');
-      return;
-    }
-
-    const { file, proofType, previewURL } = pendingProof;
-    previewModal.classList.remove('active');
-    showToast(`⏳ Uploading ${proofType}...`, 'info');
-
-    try {
-      // 1. Upload to Firebase Storage
-      const storageRef = storage.ref(`proofs/${DRIVER_ID}/${proofType}_${Date.now()}_${file.name}`);
-      const snapshot = await storageRef.put(file);
-      const downloadURL = await snapshot.ref.getDownloadURL();
-
-      // 2. Log metadata to Firestore
-      const proofRecord = {
-        type: proofType,
-        driverId: DRIVER_ID,
-        timestamp: new Date().toISOString(),
-        latitude: driverData ? driverData.currentLat : null,
-        longitude: driverData ? driverData.currentLng : null,
-        fileName: file.name,
-        fileSize: file.size,
-        downloadURL: downloadURL,
-        chsh_s: '2.76',
-        patent: 'SA 2026/05142'
-      };
-
-      await db.collection('driver_proofs').add(proofRecord);
-
-      // 3. If fuel proof, update manifest
-      if (proofType === 'Fuel Receipt') {
-        const odometer = document.getElementById('odometerKm').value;
-        if (odometer && driverData && driverData.manifestId) {
-          await db.collection('pelo_master_ledger').doc(driverData.manifestId).update({
-            fuelOdometerKm: parseInt(odometer),
-            fuelReceiptURL: downloadURL,
-            fuelReceiptAt: new Date().toISOString()
-          });
-        }
-      }
-
-      addAlert(`📸 ${proofType} uploaded`, '✅');
-      showToast(`✅ ${proofType} uploaded successfully!`, 'success');
-
-    } catch (error) {
-      console.error('Proof upload error:', error);
-      const storageDenied = error && (error.code === 'storage/unauthorized' || /permission|unauthoriz/i.test(error.message || ''));
-      showToast(storageDenied ? '❌ Upload blocked by Firebase Storage permissions. Contact the administrator.' : `❌ Upload failed: ${error.message || 'Please try again.'}`, 'error');
-      addAlert(`❌ ${proofType} upload failed`, '❌');
-    }
-
-    if (previewURL) URL.revokeObjectURL(previewURL);
-    pendingProof = null;
-    previewImage.src = '';
-  }
-
-  // Attach event listeners to the hidden file inputs
-  document.getElementById('sobrietyPhotoInput').addEventListener('change', function() {
-    openPreview('sobrietyPhotoInput', 'Sobriety Check');
-  });
-
-  document.getElementById('fuelReceiptInput').addEventListener('change', function() {
-    // Validate odometer before opening preview
-    const odometer = document.getElementById('odometerKm').value;
-    if (!odometer) {
-      showToast('⚠️ Please enter the odometer reading first.', 'warning');
-      this.value = '';
-      return;
-    }
-    openPreview('fuelReceiptInput', 'Fuel Receipt');
-  });
-
-  document.getElementById('deliveryDocInput').addEventListener('change', function() {
-    openPreview('deliveryDocInput', 'Delivery Document');
-  });
-
-  function addAlert(message, icon = '🔔') {
-    const emptyMsg = document.getElementById('emptyAlertMsg');
-    if (emptyMsg) emptyMsg.remove();
-    const time = new Date().toLocaleTimeString();
-    const alertItem = document.createElement('div');
-    alertItem.className = 'alert-item';
-    alertItem.innerHTML = `<span class="alert-icon">${icon}</span><span style="flex:1; font-weight:600;">${message}</span><span class="alert-time">${time}</span>`;
-    alertFeed.insertBefore(alertItem, alertFeed.firstChild);
-    while (alertFeed.children.length > 8) { alertFeed.removeChild(alertFeed.lastChild); }
-  }
-
-  function showToast(msg, type = 'info') {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    const div = document.createElement('div');
-    div.className = 'toast ' + type;
-    div.textContent = msg;
-    document.body.appendChild(div);
-    setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
-  }
-
-  function listenForManifest() {
-    db.collection('drivers').doc(DRIVER_ID).onSnapshot(snapshot => {
-      if (snapshot.exists) {
-        const data = snapshot.data();
-        driverData = data;
-        if (data.manifestId && (!manifestData || data.manifestId !== manifestData.manifestId)) { loadManifest(data.manifestId); }
-      }
-    }, err => console.error("Driver snapshot listener error:", err));
-  }
-
-  async function loadManifest(manifestId) {
-    if (!auth.currentUser) {
-      console.warn('Manifest load skipped: Firebase Auth is not ready.');
-      return;
-    }
-    if (!manifestId) {
-      console.warn('Manifest load skipped: no manifestId was supplied.');
-      return;
-    }
-
-    try {
-      const doc = await db.collection('pelo_master_ledger').doc(manifestId).get();
-      if (doc.exists) {
-        manifestData = doc.data();
-        manifestData.manifestId = manifestId;
-        pickupLocation.textContent = manifestData.areaCommunity || manifestData.companyName || 'Target Pickup Point';
-        proximityTriggered = false;
-        addAlert(`Manifest #${manifestId.substring(0,6)} Assigned`, '📦');
-        showToast(`📦 New Dispatch Assignment Received`, 'success');
-        if (isTracking) { updateDriverStatus('EN_ROUTE'); }
-      }
-    } catch (err) { console.error('Load manifest error:', err); }
-  }
-
-  // ============================================================
-  // WAIT FOR AUTH BEFORE LOADING FIRESTORE DATA
-  // ============================================================
-  document.addEventListener('DOMContentLoaded', function() {
-    auth.onAuthStateChanged(async (user) => {
-      try {
-        // Do not query Firestore until Firebase has confirmed a signed-in user.
-        if (!user) {
-          if (authInitializationSignInInProgress) return;
-          authInitializationSignInInProgress = true;
-          try {
-            await auth.signInAnonymously();
-            console.log('✅ Anonymous authentication requested.');
-          } catch (error) {
-            authInitializationSignInInProgress = false;
-            console.error('❌ Anonymous auth failed:', error.code || error.message, error);
-            showToast('❌ Sign-in failed. Check Firebase Anonymous provider.', 'error');
-          }
-          return;
-        }
-
-        authInitializationSignInInProgress = false;
-        if (appInitializationStarted) return;
-
-        appInitializationStarted = true;
-        authReady = true;
-        console.log('✅ Auth ready. UID:', user.uid, 'Anonymous:', user.isAnonymous);
-
-        await loadDriverData();
-        listenForManifest();
-
-        console.log('🚀 MindTech Driver Command Engine Fully Initialized');
-      } catch (error) {
-        appInitializationStarted = false;
-        console.error('❌ Initialization error:', error.code || error.message, error);
-        showToast('⚠️ Driver initialization failed: ' + (error.code || error.message), 'error');
       }
     });
+  }
 
-    console.log('🚀 MindTech Driver Command Engine Starting');
-    console.log('⚛️ Quantum Telemetry Protocol: CHSH S=2.76');
+  function listenToDrivers() {
+    db.collection('drivers').onSnapshot(snapshot => {
+      const drivers = [];
+      snapshot.forEach(doc => drivers.push({ id: doc.id, ...doc.data() }));
+      const list = document.getElementById('driverList');
+      if (drivers.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); font-size:13px; text-align:center; padding:15px 0;">No drivers registered.</p>';
+        return;
+      }
+      list.innerHTML = drivers.map(d => {
+        let dotClass = 'offline';
+        if (d.status === 'EN_ROUTE' || d.status === 'ARRIVING') dotClass = 'enroute';
+        else if (d.status === 'CHECKED_IN' || d.status === 'COMPLETED') dotClass = 'online';
+        return `
+          <div class="driver-item">
+            <div class="driver-info">
+              <h4>${d.name || 'Unknown Driver'}</h4>
+              <p>${d.vehicle || 'No vehicle'} · ${d.phone || 'No phone'}</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="driver-status-dot ${dotClass}"></span>
+              <span style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">${d.status || 'OFFLINE'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }, err => console.warn('Driver listener error:', err));
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    auth.signInAnonymously().catch(err => console.warn('Auth warning:', err));
+    initMap();
+    listenToManifests();
+    listenToDrivers();
+    console.log('📊 PELO Waste Management Dashboard — Live');
+    console.log('⚛️ Canonical: S=2.76 (Kingston) · On-Demand: S=2.02 (Fez)');
   });
 </script>
 
