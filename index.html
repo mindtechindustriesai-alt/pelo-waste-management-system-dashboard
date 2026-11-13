@@ -1,666 +1,716 @@
-<!-- Updated to point to https://pelo-complete-bm8s.onrender.com -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-    <title>MindTech Dashboard — PELO Command Center</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MindTech Driver Command</title>
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚛️</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
 
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #00B4D8; --primary-dark: #0096C7; --secondary: #00F5D4; --quantum: #8A2BE2;
-            --success: #00FF88; --danger: #EF476F; --gold: #FFD700; --warning: #FFD166;
-            --dark-bg: #05080F; --dark-card: #0A0F1A;
-            --glass-border: rgba(0, 180, 216, 0.15);
-            --text-primary: #E8EDF5; --text-secondary: #8A99B0; --text-muted: #4A5A6A;
-            --font-exo: 'Exo 2', sans-serif; --font-mono: 'Space Mono', monospace;
-            --pelo-green: #1B4D3D; --pelo-gold: #C8A450; --pelo-gold-glow: rgba(200, 164, 80, 0.15);
-        }
-        body { font-family: var(--font-exo); background: var(--dark-bg); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; padding: 16px; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 16px; position: relative; z-index: 1; }
-        .glass-card { background: rgba(15, 25, 45, 0.30); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 24px; margin-bottom: 20px; transition: all 0.3s ease; }
-        .glass-card:hover { border-color: var(--pelo-gold); }
-        .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; }
-        .card-header i { font-size: 1.3rem; color: var(--pelo-gold); }
-        .card-header h3 { font-size: 1rem; font-weight: 600; }
-        .card-header .count-badge { margin-left: auto; font-size: 0.6rem; background: rgba(0, 180, 216, 0.08); padding: 2px 12px; border-radius: 20px; color: var(--text-secondary); }
-        .header { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: rgba(15, 25, 45, 0.35); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 20px; margin-bottom: 20px; flex-wrap: wrap; }
-        .header-logo { height: 52px; width: auto; filter: drop-shadow(0 0 20px var(--pelo-gold-glow)); flex-shrink: 0; }
-        .header-text { flex: 1; }
-        .header-text h1 { font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--pelo-gold), var(--pelo-green)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .header-text p { font-size: 0.5rem; color: var(--text-secondary); letter-spacing: 2px; font-family: var(--font-mono); }
-        .header-user { display: flex; align-items: center; gap: 10px; font-size: 0.65rem; color: var(--text-secondary); flex-wrap: wrap; }
-        .btn-logout { background: rgba(239, 71, 111, 0.15); border: 1px solid rgba(239, 71, 111, 0.2); color: var(--danger); padding: 6px 14px; border-radius: 30px; cursor: pointer; font-family: var(--font-exo); font-size: 0.6rem; transition: all 0.3s; }
-        .btn-logout:hover { background: rgba(239, 71, 111, 0.25); }
-        .btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--pelo-green), var(--pelo-gold)); border: none; border-radius: 60px; color: white; font-weight: 700; cursor: pointer; font-family: var(--font-exo); font-size: 0.9rem; transition: transform 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-primary:hover { transform: scale(1.01); }
-        .btn-secondary { padding: 8px 16px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--glass-border); border-radius: 30px; color: var(--text-secondary); cursor: pointer; font-family: var(--font-exo); font-size: 0.65rem; transition: all 0.3s; }
-        .btn-secondary:hover { border-color: var(--pelo-gold); color: var(--text-primary); }
-        .btn-sm { padding: 3px 10px; border: none; border-radius: 20px; font-size: 0.5rem; font-weight: 600; cursor: pointer; font-family: var(--font-exo); transition: all 0.2s; }
-        .btn-sm:disabled { opacity: 0.38; cursor: not-allowed; filter: grayscale(0.5); }
-        .btn-sm.approve { background: rgba(0, 255, 136, 0.1); color: var(--success); }
-        .btn-sm.approve:hover:not(:disabled) { background: rgba(0, 255, 136, 0.2); }
-        .btn-sm.reject { background: rgba(239, 71, 111, 0.1); color: var(--danger); }
-        .btn-sm.reject:hover:not(:disabled) { background: rgba(239, 71, 111, 0.2); }
-        .btn-sm.view { background: rgba(0, 180, 216, 0.1); color: var(--primary); }
-        .btn-sm.view:hover:not(:disabled) { background: rgba(0, 180, 216, 0.2); }
-        .btn-sm.certify { background: rgba(200, 164, 80, 0.15); color: var(--pelo-gold); border: 1px solid rgba(200, 164, 80, 0.3); }
-        .btn-sm.certify:hover:not(:disabled) { background: rgba(200, 164, 80, 0.3); }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: rgba(15, 25, 45, 0.30); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px 20px; text-align: center; transition: all 0.3s; }
-        .stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
-        .stat-card .number { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--secondary), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .stat-card .label { font-size: 0.6rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-        .action-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-        .tab-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
-        .tab-btn { background: rgba(15, 25, 45, 0.30); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 40px; padding: 10px 18px; color: var(--text-secondary); font-size: 0.7rem; font-weight: 500; cursor: pointer; transition: all 0.3s; font-family: var(--font-exo); }
-        .tab-btn:hover { background: rgba(0, 180, 216, 0.1); border-color: var(--primary); color: var(--text-primary); }
-        .tab-btn.active { background: rgba(0, 180, 216, 0.15); border-color: var(--pelo-gold); color: var(--pelo-gold); }
-        .tab-content { display: none; animation: fadeIn 0.3s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        .table-wrap { overflow-x: auto; max-height: 400px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.7rem; }
-        th { text-align: left; padding: 10px 8px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.55rem; letter-spacing: 0.5px; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; background: rgba(5, 8, 15, 0.95); z-index: 2; }
-        td { padding: 10px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); vertical-align: middle; }
-        tr:hover td { background: rgba(0, 180, 216, 0.04); }
-        .status-badge { font-size: 0.5rem; padding: 2px 10px; border-radius: 30px; font-weight: 600; text-transform: uppercase; }
-        .status-badge.verified { background: rgba(0, 255, 136, 0.1); color: var(--success); }
-        .status-badge.flagged { background: rgba(239, 71, 111, 0.1); color: var(--danger); }
-        .status-badge.pending { background: rgba(255, 209, 102, 0.1); color: var(--warning); }
-        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(10, 18, 35, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 14px 28px; color: var(--text-primary); z-index: 9999; font-size: 0.8rem; max-width: 90%; text-align: center; animation: toastIn 0.3s ease; }
-        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-        .footer { text-align: center; padding: 20px 20px 10px; margin-top: 20px; border-top: 1px solid var(--glass-border); }
-        .footer-logos { display: flex; justify-content: center; align-items: center; gap: 30px; flex-wrap: wrap; margin-bottom: 12px; }
-        .footer-logo { height: 40px; width: auto; opacity: 0.7; transition: all 0.3s; filter: drop-shadow(0 0 8px rgba(0, 180, 216, 0.05)); object-fit: contain; }
-        .footer-logo:hover { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 12px rgba(0, 180, 216, 0.15)); }
-        .quantum-line { font-family: var(--font-mono); font-size: 0.5rem; color: var(--text-muted); letter-spacing: 2px; opacity: 0.4; }
-        .footer .copyright { font-size: 0.5rem; color: var(--text-secondary); margin-top: 4px; }
-        @media (max-width: 768px) { .container { padding: 10px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .header { flex-wrap: wrap; } .header-logo { height: 40px; } .tab-bar { gap: 6px; } .tab-btn { font-size: 0.6rem; padding: 6px 12px; } .action-row { flex-direction: column; } .action-row .btn-secondary { width: 100%; text-align: center; } }
-        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr 1fr; } .header-logo { height: 36px; } .header-text h1 { font-size: 0.9rem; } .header-badge { font-size: 0.45rem; padding: 2px 10px; } .footer-logo { height: 28px; } .footer-logos { gap: 16px; } }
-        .table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
-        .table-wrap::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 4px; }
-        .table-wrap::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
-        .empty-state { text-align: center; padding: 30px 0; color: var(--text-secondary); font-size: 0.75rem; }
-        .empty-state i { font-size: 2rem; margin-bottom: 8px; opacity: 0.3; }
-        .loading-spinner { display: flex; align-items: center; justify-content: center; padding: 40px 0; gap: 12px; color: var(--text-secondary); font-size: 0.8rem; }
-        .loading-spinner i { animation: spin 1s linear infinite; color: var(--primary); }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .handshake-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 20px; font-size: 0.55rem; font-family: var(--font-mono); border: 1px solid var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.08); transition: all 0.3s; white-space: nowrap; }
-        .handshake-badge.confirmed { border-color: var(--success); color: var(--success); background: rgba(0, 255, 136, 0.08); }
-        .handshake-badge.unreachable { border-color: var(--danger); color: var(--danger); background: rgba(239, 71, 111, 0.08); }
-    </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #030712; --card-bg: rgba(15, 23, 42, 0.75); --card-border: rgba(56, 189, 248, 0.15);
+      --input-bg: rgba(30, 41, 59, 0.6); --accent-cyan: #38bdf8; --accent-blue: #0284c7;
+      --accent-green: #10b981; --accent-amber: #f59e0b; --accent-rose: #f43f5e; --accent-purple: #a855f7;
+      --text-primary: #f8fafc; --text-secondary: #94a3b8; --text-muted: #64748b;
+      --radius-lg: 20px; --radius-md: 14px; --radius-sm: 8px; --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { font-family: 'Exo 2', sans-serif; background: var(--bg-dark); background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 70%), radial-gradient(circle at 0% 100%, rgba(168, 85, 247, 0.05) 0%, transparent 50%); color: var(--text-primary); min-height: 100vh; padding: 16px 12px; overflow-x: hidden; position: relative; }
+    body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(1px 1px at 10% 20%, rgba(56, 189, 248, 0.15), transparent), radial-gradient(1px 1px at 30% 60%, rgba(168, 85, 247, 0.12), transparent), radial-gradient(1px 1px at 50% 80%, rgba(16, 185, 129, 0.10), transparent), radial-gradient(1px 1px at 70% 30%, rgba(56, 189, 248, 0.08), transparent), radial-gradient(1px 1px at 90% 70%, rgba(168, 85, 247, 0.10), transparent), radial-gradient(1px 1px at 15% 90%, rgba(16, 185, 129, 0.06), transparent), radial-gradient(1px 1px at 85% 10%, rgba(56, 189, 248, 0.12), transparent), radial-gradient(1px 1px at 45% 45%, rgba(168, 85, 247, 0.08), transparent); background-size: 200px 200px; pointer-events: none; z-index: 0; }
+    .container { max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); margin-bottom: 16px; box-shadow: var(--shadow-glow); transition: all 0.3s ease; }
+    .header:hover { border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 0 40px rgba(56, 189, 248, 0.08); }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-logo { height: 32px; width: auto; filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4)); transition: all 0.3s ease; }
+    .header-logo:hover { filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.6)); }
+    .header h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; background: linear-gradient(135deg, #fff 30%, var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Exo 2', sans-serif; }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; transition: all 0.3s ease; }
+    .status-badge.online { background: rgba(16, 185, 129, 0.12); color: var(--accent-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-badge.tracking { background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.4); animation: pulse-glow 2s infinite; }
+    .status-badge.offline { background: rgba(244, 63, 94, 0.12); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
+    .status-badge.arriving { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); animation: pulse-glow-amber 0.8s infinite; }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 5px rgba(56, 189, 248, 0.2); } 50% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.6); } }
+    @keyframes pulse-glow-amber { 0%, 100% { box-shadow: 0 0 5px rgba(245, 158, 11, 0.2); } 50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); } }
+    .profile-card { background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow-glow); transition: all 0.3s ease; }
+    .profile-card:hover { border-color: rgba(56, 189, 248, 0.2); }
+    .profile-header { display: flex; align-items: center; gap: 12px; }
+    .profile-avatar { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; color: #fff; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3); flex-shrink: 0; transition: all 0.3s ease; }
+    .profile-avatar:hover { transform: scale(1.05); box-shadow: 0 4px 20px rgba(2, 132, 199, 0.5); }
+    .profile-info h2 { font-size: 15px; font-weight: 700; font-family: 'Exo 2', sans-serif; }
+    .profile-info p { font-size: 12px; color: var(--text-secondary); margin-top: 2px; font-family: 'Exo 2', sans-serif; }
+    .driver-status { margin-top: 12px; display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--radius-sm); background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; transition: all 0.3s ease; }
+    .status-dot.en-route { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); animation: pulse 1.5s infinite; }
+    .status-dot.arriving { background: var(--accent-amber); box-shadow: 0 0 10px var(--accent-amber); animation: pulse 0.4s infinite; }
+    .status-dot.completed { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+    .status-dot.offline { background: var(--accent-rose); }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
+    .job-card { background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; position: relative; overflow: hidden; box-shadow: var(--shadow-glow); transition: all 0.3s ease; }
+    .job-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); transition: all 0.3s ease; }
+    .job-card:hover { border-color: rgba(56, 189, 248, 0.2); }
+    .job-card .label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; font-family: 'Exo 2', sans-serif; }
+    .job-card .value { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Exo 2', sans-serif; }
+    .job-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .job-detail-item { background: rgba(15, 23, 42, 0.6); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(255, 255, 255, 0.05); text-align: left; transition: all 0.3s ease; }
+    .job-detail-item:hover { border-color: rgba(56, 189, 248, 0.15); background: rgba(15, 23, 42, 0.8); }
+    .job-detail-item .label { font-size: 8px; }
+    .job-detail-item .value { font-size: 15px; font-weight: 800; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .tracking-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .btn { padding: 12px; border: none; border-radius: var(--radius-sm); font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Exo 2', sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; position: relative; overflow: hidden; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    .btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
+    .btn:hover:not(:disabled)::after { opacity: 1; }
+    .btn-start { background: linear-gradient(135deg, var(--accent-green), #047857); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); }
+    .btn-start:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+    .btn-stop { background: linear-gradient(135deg, var(--accent-rose), #b91c1c); color: #fff; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25); }
+    .btn-stop:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(244, 63, 94, 0.4); }
+    .btn-checkin { background: linear-gradient(135deg, var(--accent-amber), #b45309); color: #fff; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25); }
+    .btn-checkin:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
+    .btn-complete { background: linear-gradient(135deg, var(--accent-purple), #6b21a8); color: #fff; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25); }
+    .btn-complete:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4); }
+    .btn:active:not(:disabled) { transform: scale(0.97); }
+    .alert-feed { background: var(--card-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 12px 16px; max-height: 140px; overflow-y: auto; box-shadow: var(--shadow-glow); }
+    .alert-feed::-webkit-scrollbar { width: 3px; }
+    .alert-feed::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+    .alert-feed::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 10px; }
+    .alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 11px; animation: slideIn 0.3s ease; }
+    .alert-item:last-child { border-bottom: none; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    .alert-icon { font-size: 12px; margin-top: 1px; flex-shrink: 0; }
+    .alert-time { color: var(--text-muted); font-size: 9px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+    .footer { text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--card-border); font-size: 10px; color: var(--text-muted); font-family: 'Exo 2', sans-serif; }
+    .footer .quantum { color: var(--accent-purple); font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.5px; }
+    .toast { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 28px); min-width: 0; background: #0f172a; color: var(--text-primary); padding: 12px 16px; border-radius: 18px; border: 1px solid var(--card-border); box-shadow: 0 10px 30px rgba(0,0,0,0.8); font-weight: 700; font-size: 13px; line-height: 1.4; z-index: 99999; text-align: center; white-space: normal; overflow-wrap: anywhere; word-break: break-word; animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1); font-family: 'Exo 2', sans-serif; }
+    .toast.success { border-color: var(--accent-green); color: var(--accent-green); }
+    .toast.error { border-color: var(--accent-rose); color: var(--accent-rose); }
+    .toast.warning { border-color: var(--accent-amber); color: var(--accent-amber); }
+    @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @media (max-width: 480px) {
+      body { padding: 12px 10px calc(24px + env(safe-area-inset-bottom)); }
+      .toast { width: calc(100vw - 28px); max-width: calc(100vw - 28px); padding: 12px 14px; border-radius: 16px; font-size: 12px; }
+      .header { gap: 8px; padding: 10px 12px; }
+      .header-left { min-width: 0; gap: 8px; }
+      .header h1 { font-size: 14px; overflow-wrap: anywhere; }
+      .status-badge, .handshake-badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: center; }
+      .profile-info { min-width: 0; }
+      .profile-info h2, .profile-info p { overflow-wrap: anywhere; }
+      .job-details { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .preview-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .btn { min-width: 0; white-space: normal; line-height: 1.25; }
+    }
+    .handshake-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; border: 1px solid var(--accent-amber); color: var(--accent-amber); background: rgba(245, 158, 11, 0.08); transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+    .handshake-badge.confirmed { border-color: var(--accent-green); color: var(--accent-green); background: rgba(16, 185, 129, 0.08); }
+    .handshake-badge.unreachable { border-color: var(--accent-rose); color: var(--accent-rose); background: rgba(244, 63, 94, 0.08); }
+
+    /* PROOF SECTIONS */
+    .proof-card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; }
+    .proof-card .form-group { margin-bottom: 10px; }
+    .proof-card label { display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px; font-family: 'Exo 2', sans-serif; }
+    .proof-card input[type="number"] { width: 100%; padding: 10px; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: var(--radius-sm); color: white; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+    /* PREVIEW MODAL */
+    .preview-modal { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(8px); z-index: 99998; display: none; align-items: center; justify-content: center; padding: 16px; }
+    .preview-modal.active { display: flex; }
+    .preview-content { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 20px; max-width: 440px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+    .preview-content h3 { font-size: 14px; margin-bottom: 12px; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px; }
+    .preview-image-wrap { width: 100%; max-height: 55vh; overflow: hidden; border-radius: var(--radius-md); border: 1px solid var(--card-border); margin-bottom: 14px; background: #000; display: flex; align-items: center; justify-content: center; }
+    .preview-image-wrap img { max-width: 100%; max-height: 55vh; object-fit: contain; }
+    .preview-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .preview-actions .btn { padding: 12px; font-size: 12px; }
+  </style>
 </head>
 <body>
 
-    <div class="container" id="app">
-        <!-- HEADER -->
-        <header class="header">
-            <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO Recovery Centre" class="header-logo" onerror="this.src='https://i.postimg.cc/T114NczG/pelo-recovery-image-removebg-preview.png'" />
-            <div class="header-text">
-                <h1>MindTech Dashboard</h1>
-                <p>PELO Command Center</p>
-            </div>
-            <!-- LIVE HANDSHAKE BADGE -->
-            <span id="handshakeBadge" class="handshake-badge"><i class="fas fa-satellite-dish"></i> Handshake: Pending...</span>
-            <div class="header-user">
-                <span id="userNameDisplay">Authenticating...</span>
-                <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-            </div>
-        </header>
+<div class="container">
 
-        <!-- STATS -->
-        <section class="stats-grid" id="statsGrid">
-            <div class="stat-card"><div class="number" id="statEntries">0</div><div class="label">Total Entries</div></div>
-            <div class="stat-card"><div class="number" id="statCollectors">0</div><div class="label">Collectors</div></div>
-            <div class="stat-card"><div class="number" id="statOil">0L</div><div class="label">Oil Collected</div></div>
-            <div class="stat-card"><div class="number" id="statPending">0</div><div class="label">Pending Review</div></div>
-            <div class="stat-card"><div class="number" id="statPayouts">R0</div><div class="label">Total Payouts</div></div>
-            <div class="stat-card"><div class="number" id="statUsers">0</div><div class="label">Registered Users</div></div>
-        </section>
-
-        <!-- ACTION BUTTONS -->
-        <div class="action-row">
-            <button class="btn-secondary" onclick="window.location.href='/index.html'"><i class="fas fa-arrow-left"></i> Back to App</button>
-            <button class="btn-secondary" onclick="document.getElementById('tab-entries').click();"><i class="fas fa-list-ul"></i> View Entries</button>
-            <button class="btn-secondary" onclick="document.getElementById('tab-pending').click();"><i class="fas fa-user-plus"></i> Pending Approvals</button>
-            <button class="btn-secondary" onclick="document.getElementById('tab-audits').click();"><i class="fas fa-shield-alt"></i> Audit Log</button>
-            <button class="btn-secondary" onclick="location.reload();"><i class="fas fa-sync-alt"></i> Refresh</button>
-        </div>
-
-        <!-- TAB SYSTEM -->
-        <div class="tab-bar">
-            <button class="tab-btn active" data-tab="tab-entries"><i class="fas fa-list-ul"></i> Recent Entries</button>
-            <button class="tab-btn" data-tab="tab-pending"><i class="fas fa-user-plus"></i> Pending Registrations</button>
-            <button class="tab-btn" data-tab="tab-audits"><i class="fas fa-shield-alt"></i> Quantum Audit</button>
-        </div>
-
-        <!-- TAB 1: RECENT ENTRIES -->
-        <div id="tab-entries" class="glass-card tab-content active">
-            <div class="card-header">
-                <i class="fas fa-list-ul"></i>
-                <h3>Recent Entries</h3>
-                <span class="count-badge" id="entryCount">0 entries</span>
-            </div>
-            <div class="table-wrap" id="entriesTableWrap">
-                <div class="loading-spinner" id="entriesLoading"><i class="fas fa-spinner"></i> Loading entries...</div>
-                <table id="entriesTable" style="display:none;">
-                    <thead><tr><th>Owner</th><th>Area</th><th>Oil (L)</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody id="entriesBody"></tbody>
-                </table>
-                <div class="empty-state" id="entriesEmpty" style="display:none;">
-                    <i class="fas fa-inbox"></i>
-                    <p>No entries yet.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: PENDING REGISTRATIONS -->
-        <div id="tab-pending" class="glass-card tab-content">
-            <div class="card-header">
-                <i class="fas fa-user-plus"></i>
-                <h3>Pending Registrations</h3>
-                <span class="count-badge" id="pendingCount">0</span>
-            </div>
-            <div class="table-wrap" id="pendingTableWrap">
-                <div class="loading-spinner" id="pendingLoading"><i class="fas fa-spinner"></i> Loading...</div>
-                <table id="pendingTable" style="display:none;">
-                    <thead><tr><th>Name</th><th>Area</th><th>Action</th></tr></thead>
-                    <tbody id="pendingBody"></tbody>
-                </table>
-                <div class="empty-state" id="pendingEmpty" style="display:none;">
-                    <i class="fas fa-check-circle"></i>
-                    <p>No pending registrations.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 3: QUANTUM AUDIT -->
-        <div id="tab-audits" class="glass-card tab-content">
-            <div class="card-header">
-                <i class="fas fa-shield-alt"></i>
-                <h3>Quantum Audit Log</h3>
-                <span class="count-badge" id="auditCount">0 flagged</span>
-            </div>
-            <div class="table-wrap" id="auditTableWrap">
-                <div class="loading-spinner" id="auditLoading"><i class="fas fa-spinner"></i> Loading audits...</div>
-                <table id="auditTable" style="display:none;">
-                    <thead><tr><th>Entry ID</th><th>Risk Score</th><th>Anomalies</th><th>Status</th><th>Action</th></tr></thead>
-                    <tbody id="auditBody"></tbody>
-                </table>
-                <div class="empty-state" id="auditEmpty" style="display:none;">
-                    <i class="fas fa-check-double"></i>
-                    <p>All entries verified. No flags.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="footer">
-            <div class="footer-logos">
-                <img src="https://raw.githubusercontent.com/mindtechindustriesai-alt/my-images/main/pelo_community_final_image-removebg-preview.png" alt="PELO Recovery" class="footer-logo" onerror="this.style.display='none'" />
-                <img src="https://i.postimg.cc/zXW78GNH/Mind-Tech-Transparent-Logo.png" alt="MindTech Industries" class="footer-logo" onerror="this.style.display='none'" />
-                <img src="https://i.postimg.cc/T3ytnBqN/KD-LOGO-IMAGE-removebg-preview.png" alt="KD Concepts" class="footer-logo" onerror="this.style.display='none'" />
-            </div>
-            <div class="quantum-line">⚛️ CHSH S=2.76 · SA 2026/05142</div>
-            <div class="copyright">© 2026 PELO Recovery · Powered by MindTech Industries · All data flows to mindtech.industriesai@gmail.com</div>
-        </div>
+  <header class="header">
+    <div class="header-left">
+      <img src="https://i.postimg.cc/zXW78GNH/Mind-Tech-Transparent-Logo.png" alt="MindTech" class="header-logo" onerror="this.style.display='none'">
+      <h1>DRIVER COMMAND</h1>
     </div>
+    <span id="handshakeBadge" class="handshake-badge"><i class="fas fa-satellite-dish"></i> Handshake: Pending...</span>
+    <span class="status-badge offline" id="connectionStatus">Standby</span>
+  </header>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const badge = document.getElementById('handshakeBadge');
-            if (!badge) return;
-            
-            (async function runHandshake() {
-                try {
-                    await fetch('https://pelo-complete-bm8s.onrender.com/health', { method: 'GET', signal: AbortSignal.timeout(15000) }).catch(() => {});
-                    const res = await fetch('https://pelo-complete-bm8s.onrender.com/api/v1/verify/chsh', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                        signal: AbortSignal.timeout(30000)
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        badge.className = 'handshake-badge confirmed';
-                        badge.innerHTML = `<i class="fas fa-check-circle"></i> Handshake: CONFIRMED (S=${data.canonical_anchor?.chsh_s || 2.76})`;
-                    } else {
-                        badge.className = 'handshake-badge unreachable';
-                        badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Handshake: UNREACHABLE';
-                    }
-                } catch (error) {
-                    badge.className = 'handshake-badge unreachable';
-                    badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Handshake: UNREACHABLE';
-                }
-            })();
+  <div class="profile-card">
+    <div class="profile-header">
+      <div class="profile-avatar" id="avatarInitials">TM</div>
+      <div class="profile-info">
+        <h2 id="driverName">Thabo Mokoena</h2>
+        <p id="driverPhone">📞 082 555 1234</p>
+        <p id="driverVehicle">🚗 Toyota Hilux (ZX 1234)</p>
+      </div>
+    </div>
+    <div class="driver-status">
+      <span class="status-dot offline" id="statusDot"></span>
+      <span id="statusText" style="font-size: 12px; font-weight: 700;">Offline</span>
+      <span style="margin-left:auto; font-size:10px; color:var(--text-muted); font-family: 'JetBrains Mono';" id="lastUpdateTime">—</span>
+    </div>
+  </div>
+
+  <div class="job-card" id="jobCard">
+    <div class="label">📍 Active Pickup Target</div>
+    <div class="value" id="pickupLocation">Awaiting Assignment...</div>
+    <div class="job-details">
+      <div class="job-detail-item">
+        <div class="label">Distance</div>
+        <div class="value" id="distanceValue">—</div>
+      </div>
+      <div class="job-detail-item">
+        <div class="label">ETA</div>
+        <div class="value" id="etaValue">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROOF: SOBRIETY SELFIE (FRONT CAMERA) -->
+  <div class="proof-card">
+    <div class="card-header" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+      <i class="fas fa-shield-alt" style="color: var(--accent-rose);"></i>
+      <h3 style="font-size: 0.9rem;">Sobriety Check</h3>
+    </div>
+    <p style="font-size: 0.65rem; color: var(--text-muted); margin-bottom:8px;">Front camera opens. Preview before save. No excuses.</p>
+    <input type="file" id="sobrietyPhotoInput" accept="image/*" capture="user" style="display: none;">
+    <button class="btn btn-start" onclick="document.getElementById('sobrietyPhotoInput').click()" style="width:100%; padding:10px; font-size:0.75rem;">
+        <i class="fas fa-camera"></i> Take Sobriety Selfie
+    </button>
+  </div>
+
+  <!-- PROOF: FUEL RECEIPT & ODOMETER (BACK CAMERA) -->
+  <div class="proof-card">
+    <div class="card-header" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+      <i class="fas fa-gas-pump" style="color: var(--accent-amber);"></i>
+      <h3 style="font-size: 0.9rem;">Fuel Stop Proof</h3>
+    </div>
+    <div class="form-group">
+      <label>Odometer Reading (km)</label>
+      <input type="number" id="odometerKm" placeholder="e.g. 145230">
+    </div>
+    <input type="file" id="fuelReceiptInput" accept="image/*" capture="environment" style="display: none;">
+    <button class="btn btn-checkin" onclick="document.getElementById('fuelReceiptInput').click()" style="width:100%; padding:10px; font-size:0.75rem;">
+        <i class="fas fa-camera"></i> Capture Fuel Receipt
+    </button>
+  </div>
+
+  <!-- PROOF: DELIVERY DOCUMENT (BACK CAMERA) -->
+  <div class="proof-card">
+    <div class="card-header" style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+      <i class="fas fa-file-signature" style="color: var(--accent-green);"></i>
+      <h3 style="font-size: 0.9rem;">Delivery Document</h3>
+    </div>
+    <p style="font-size: 0.65rem; color: var(--text-muted); margin-bottom:8px;">Back camera opens. Preview the signed note before save.</p>
+    <input type="file" id="deliveryDocInput" accept="image/*" capture="environment" style="display: none;">
+    <button class="btn btn-complete" onclick="document.getElementById('deliveryDocInput').click()" style="width:100%; padding:10px; font-size:0.75rem;">
+        <i class="fas fa-camera"></i> Capture Delivery Note
+    </button>
+  </div>
+
+  <div class="tracking-controls">
+    <button class="btn btn-start" id="startBtn" onclick="startTracking()"><i class="fa-solid fa-play"></i> Start</button>
+    <button class="btn btn-stop" id="stopBtn" onclick="stopTracking()" disabled><i class="fa-solid fa-stop"></i> Stop</button>
+    <button class="btn btn-checkin" id="checkinBtn" onclick="checkIn()" disabled><i class="fa-solid fa-location-crosshairs"></i> Check-in</button>
+    <button class="btn btn-complete" id="completeBtn" onclick="completePickup()" disabled><i class="fa-solid fa-box-check"></i> Complete</button>
+  </div>
+
+  <div class="alert-feed" id="alertFeed">
+    <div style="color:var(--text-muted); font-size:11px; text-align:center; padding:8px 0;" id="emptyAlertMsg">
+      <i class="fa-regular fa-bell"></i> System telemetry operational
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="quantum">⚛️ CHSH S=2.76 · SA 2026/05142</div>
+    <div style="margin-top:4px;">© 2026 MindTech Driver · Built in Africa, for Africa</div>
+  </div>
+
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="preview-modal" id="previewModal">
+  <div class="preview-content">
+    <h3 id="previewTitle">Preview Photo</h3>
+    <div class="preview-image-wrap">
+      <img id="previewImage" alt="Preview">
+    </div>
+    <div class="preview-actions">
+      <button class="btn btn-stop" onclick="cancelPreview()"><i class="fas fa-redo"></i> Retake</button>
+      <button class="btn btn-start" onclick="confirmAndUpload()"><i class="fas fa-check"></i> Save & Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- HANDSHAKE — UPDATED URL AND CORRECT FIELD -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const badge = document.getElementById('handshakeBadge');
+    if (!badge) return;
+    badge.innerHTML = '<i class="fas fa-satellite-dish"></i> Handshake: Pending...';
+
+    (async function runHandshake() {
+      try {
+        await fetch('https://pelo-complete-bm8s.onrender.com/health', { method: 'GET', signal: AbortSignal.timeout(15000) }).catch(() => {});
+        const res = await fetch('https://pelo-complete-bm8s.onrender.com/api/v1/verify/chsh', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(30000)
         });
-    </script>
+        if (res.ok) {
+          const data = await res.json();
+          // FIX: Read the correct field from the backend response
+          const sValue = data.canonical_anchor ? data.canonical_anchor.chsh_s : (data.S || 2.76);
+          badge.className = 'handshake-badge confirmed';
+          badge.innerHTML = `<i class="fas fa-check-circle"></i> Handshake: CONFIRMED (S=${sValue})`;
+        } else {
+          badge.className = 'handshake-badge unreachable';
+          badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Handshake: UNREACHABLE';
+        }
+      } catch (error) {
+        badge.className = 'handshake-badge unreachable';
+        badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Handshake: UNREACHABLE';
+      }
+    })();
+  });
+</script>
 
-    <script>
-        var firebaseConfig = {
-            apiKey: "AIzaSyD5OB59lG6bAsmQ7A97zXP_MfQ5AM3BYaw",
-            authDomain: "mindflow-ai-education.firebaseapp.com",
-            projectId: "mindflow-ai-education",
-            storageBucket: "mindflow-ai-education.firebasestorage.app",
-            messagingSenderId: "157615197603",
-            appId: "1:157615197603:web:540d67781fc55d04c11e16"
-        };
+<!-- MAIN APP -->
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyD5OB59lG6bAsmQ7A97zXP_MfQ5AM3BYaw",
+    authDomain: "mindflow-ai-education.firebaseapp.com",
+    projectId: "mindflow-ai-education",
+    storageBucket: "mindflow-ai-education.firebasestorage.app",
+    messagingSenderId: "157615197603",
+    appId: "1:157615197603:web:540d67781fc55d04c11e16"
+  };
 
-        firebase.initializeApp(firebaseConfig);
-        var auth = firebase.auth();
-        var db = firebase.firestore();
-        
-        db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
-            console.warn('Persistence error:', err.code);
-        });
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
 
-        var userNameDisplay = document.getElementById('userNameDisplay');
-        var logoutBtn = document.getElementById('logoutBtn');
-        var statEntries = document.getElementById('statEntries');
-        var statCollectors = document.getElementById('statCollectors');
-        var statOil = document.getElementById('statOil');
-        var statPending = document.getElementById('statPending');
-        var statPayouts = document.getElementById('statPayouts');
-        var statUsers = document.getElementById('statUsers');
-        var entriesLoading = document.getElementById('entriesLoading');
-        var entriesTable = document.getElementById('entriesTable');
-        var entriesBody = document.getElementById('entriesBody');
-        var entriesEmpty = document.getElementById('entriesEmpty');
-        var entryCount = document.getElementById('entryCount');
-        var pendingLoading = document.getElementById('pendingLoading');
-        var pendingTable = document.getElementById('pendingTable');
-        var pendingBody = document.getElementById('pendingBody');
-        var pendingEmpty = document.getElementById('pendingEmpty');
-        var pendingCount = document.getElementById('pendingCount');
-        var auditLoading = document.getElementById('auditLoading');
-        var auditTable = document.getElementById('auditTable');
-        var auditBody = document.getElementById('auditBody');
-        var auditEmpty = document.getElementById('auditEmpty');
-        var auditCount = document.getElementById('auditCount');
-        var entriesUnsubscribe = null;
-        var pendingUnsubscribe = null;
-        var auditUnsubscribe = null;
-        var isAdminUser = false;
+  // ============================================================
+  // AUTHENTICATION — INITIALIZATION IS GATED BY AUTH STATE
+  // ============================================================
+  const auth = firebase.auth();
+  let authReady = false;
+  let appInitializationStarted = false;
+  let authInitializationSignInInProgress = false;
 
-        auth.onAuthStateChanged(function(user) {
-            if (user) {
-                user.getIdTokenResult().then(function(idTokenResult) {
-                    isAdminUser = true; // TEMPORARY OVERRIDE FOR TESTING
-                    
-                    if (isAdminUser) {
-                        userNameDisplay.textContent = "Admin (" + user.email + ")";
-                    } else {
-                        userNameDisplay.textContent = "Guest (Read-Only)";
-                    }
-                    console.log('✅ Authenticated:', user.uid, '| Admin:', isAdminUser);
-                    startListening();
-                }).catch(function(error) {
-                    console.error('❌ Claim check failed:', error);
-                    userNameDisplay.textContent = "Guest (Read-Only)";
-                    isAdminUser = false;
-                    startListening();
-                });
-            } else {
-                userNameDisplay.textContent = 'Authenticating...';
-                console.log('⏳ No user found. Attempting anonymous sign-in...');
-                auth.signInAnonymously()
-                    .then(function() {
-                        console.log('✅ Anonymous sign-in successful.');
-                    })
-                    .catch(function(error) {
-                        console.error('❌ Anonymous sign-in failed:', error.code, error.message);
-                        userNameDisplay.textContent = 'Auth Failed';
-                        showToast('❌ Authentication failed. Check Firebase Anonymous provider.');
-                    });
-            }
-        });
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+  db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+  db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
-        logoutBtn.addEventListener('click', function() {
-            auth.signOut();
-            window.location.href = '/index.html';
-        });
+  const DRIVER_ID = 'DRV-001';
+  let watchId = null;
+  let isTracking = false;
+  let driverData = null;
+  let manifestData = null;
+  let proximityTriggered = false;
+  let audioCtx = null;
 
-        document.querySelectorAll('.tab-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-                this.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-                document.getElementById(this.dataset.tab).classList.add('active');
-            });
-        });
+  // Preview state
+  let pendingProof = null; // { file, proofType, previewURL }
 
-        function startListening() {
-            listenStats();
-            listenEntries();
-            listenPending();
-            listenAudits();
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const lastUpdateTime = document.getElementById('lastUpdateTime');
+  const pickupLocation = document.getElementById('pickupLocation');
+  const distanceValue = document.getElementById('distanceValue');
+  const etaValue = document.getElementById('etaValue');
+  const alertFeed = document.getElementById('alertFeed');
+  const connectionStatus = document.getElementById('connectionStatus');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const checkinBtn = document.getElementById('checkinBtn');
+  const completeBtn = document.getElementById('completeBtn');
+  const previewModal = document.getElementById('previewModal');
+  const previewImage = document.getElementById('previewImage');
+  const previewTitle = document.getElementById('previewTitle');
+
+  function playProximityChirp() {
+    try {
+      if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    } catch(e) { console.warn('Audio feedback blocked or unsupported:', e); }
+  }
+
+  async function loadDriverData() {
+    try {
+      const doc = await db.collection('drivers').doc(DRIVER_ID).get();
+      if (doc.exists) {
+        driverData = doc.data();
+        document.getElementById('driverName').textContent = driverData.name || 'Thabo Mokoena';
+        document.getElementById('driverPhone').textContent = '📞 ' + (driverData.phone || '082 555 1234');
+        document.getElementById('driverVehicle').textContent = '🚗 ' + (driverData.vehicle || 'Toyota Hilux (ZX 1234)');
+        const initials = (driverData.name || 'TM').split(' ').map(n => n[0]).join('').substring(0, 2);
+        document.getElementById('avatarInitials').textContent = initials;
+        if (driverData.manifestId) { await loadManifest(driverData.manifestId); }
+      } else {
+        const initialProfile = { driverId: DRIVER_ID, name: 'Thabo Mokoena', phone: '082 555 1234', vehicle: 'Toyota Hilux (ZX 1234)', status: 'OFFLINE', createdAt: new Date().toISOString(), quantumState: { chsh: 2.76, patent: 'SA 2026/05142' } };
+        await db.collection('drivers').doc(DRIVER_ID).set(initialProfile);
+        driverData = initialProfile;
+        document.getElementById('driverName').textContent = initialProfile.name;
+        document.getElementById('driverPhone').textContent = '📞 ' + initialProfile.phone;
+        document.getElementById('driverVehicle').textContent = '🚗 ' + initialProfile.vehicle;
+        document.getElementById('avatarInitials').textContent = 'TM';
+      }
+    } catch (err) { console.error('Load driver error:', err); showToast('⚠️ Driver profile load failed', 'error'); }
+  }
+
+  function updateDriverStatus(status) {
+    const statusMap = {
+      'EN_ROUTE': { dot: 'en-route', text: 'EN ROUTE', color: 'var(--accent-cyan)' },
+      'ARRIVING': { dot: 'arriving', text: '🚨 ARRIVING NOW', color: 'var(--accent-amber)' },
+      'CHECKED_IN': { dot: 'en-route', text: '✅ CHECKED IN', color: 'var(--accent-green)' },
+      'COMPLETED': { dot: 'completed', text: '✅ COMPLETED', color: 'var(--accent-green)' },
+      'OFFLINE': { dot: 'offline', text: 'OFFLINE', color: 'var(--accent-rose)' }
+    };
+    const info = statusMap[status] || statusMap['OFFLINE'];
+    statusDot.className = 'status-dot ' + info.dot;
+    statusText.textContent = info.text;
+    statusText.style.color = info.color;
+    if (status === 'OFFLINE') { connectionStatus.textContent = 'Standby'; connectionStatus.className = 'status-badge offline'; }
+    else if (isTracking) { connectionStatus.textContent = 'GPS Active'; connectionStatus.className = 'status-badge tracking'; }
+    else { connectionStatus.textContent = 'Online'; connectionStatus.className = 'status-badge online'; }
+    checkinBtn.disabled = (status !== 'EN_ROUTE' && status !== 'ARRIVING') || !manifestData;
+    completeBtn.disabled = status !== 'CHECKED_IN';
+    db.collection('drivers').doc(DRIVER_ID).update({ status: status, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.error("Firestore status sync error:", err));
+  }
+
+  function startTracking() {
+    if (!navigator.geolocation) { showToast('⚠️ GPS hardware unavailable.', 'error'); return; }
+    if (isTracking) return;
+    if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    showToast('📍 Activating GPS telemetry...', 'warning');
+    watchId = navigator.geolocation.watchPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        updateLocation(latitude, longitude);
+        if (!isTracking) { isTracking = true; startBtn.disabled = true; stopBtn.disabled = false; updateDriverStatus('EN_ROUTE'); showToast('✅ GPS Telemetry Active', 'success'); }
+      },
+      error => { console.error('GPS error:', error); showToast('⚠️ GPS Error: ' + error.message, 'error'); },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+    );
+  }
+
+  function stopTracking() {
+    if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    isTracking = false;
+    proximityTriggered = false;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    updateDriverStatus('OFFLINE');
+    showToast('⏹️ GPS Telemetry Terminated', 'warning');
+  }
+
+  async function updateLocation(lat, lng) {
+    try {
+      const timestamp = new Date().toLocaleTimeString();
+      lastUpdateTime.textContent = timestamp;
+      await db.collection('drivers').doc(DRIVER_ID).update({ currentLat: lat, currentLng: lng, lastUpdate: firebase.firestore.FieldValue.serverTimestamp() });
+      if (manifestData && manifestData.latitude && manifestData.longitude) {
+        const targetLat = parseFloat(manifestData.latitude);
+        const targetLng = parseFloat(manifestData.longitude);
+        if (!isNaN(targetLat) && !isNaN(targetLng)) {
+          const distance = calculateDistance(lat, lng, targetLat, targetLng);
+          distanceValue.textContent = distance < 1 ? Math.round(distance * 1000) + ' m' : distance.toFixed(2) + ' km';
+          const etaMinutes = Math.round((distance / 30) * 60);
+          etaValue.textContent = etaMinutes > 0 ? etaMinutes + ' min' : '< 1 min';
+          if (distance <= 0.1 && !proximityTriggered) {
+            proximityTriggered = true;
+            playProximityChirp();
+            const alertMsg = `${driverData.name} within 100m zone`;
+            addAlert(alertMsg, '🚨');
+            updateDriverStatus('ARRIVING');
+            showToast(`🚨 Approaching Pickup Point (<100m)`, 'warning');
+            if (driverData.manifestId) { db.collection('pelo_master_ledger').doc(driverData.manifestId).update({ proximityAlert: true, arrivingAt: new Date().toISOString() }).catch(e => console.error("Proximity sync error:", e)); }
+          }
+        }
+      }
+    } catch (err) { console.error('Update location error:', err); }
+  }
+
+  function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  async function checkIn() {
+    if (!driverData || !manifestData) { showToast('⚠️ No active manifest assigned.', 'error'); return; }
+    try {
+      showToast('📋 Transmitting On-Site Status...', 'warning');
+      const now = new Date().toISOString();
+      await db.collection('drivers').doc(DRIVER_ID).update({ checkedInAt: now, status: 'CHECKED_IN' });
+      await db.collection('pelo_master_ledger').doc(driverData.manifestId).update({ status: 'CHECKED_IN', checkedInAt: now, driverCheckedIn: true });
+      updateDriverStatus('CHECKED_IN');
+      addAlert(`Driver checked in on-site`, '✅');
+      showToast('✅ Check-in Recorded Successfully', 'success');
+    } catch (err) { showToast('❌ Check-in failed: ' + err.message, 'error'); }
+  }
+
+  async function completePickup() {
+    if (!driverData || !manifestData) { showToast('⚠️ No active job to complete.', 'error'); return; }
+    try {
+      showToast('📦 Sealing manifest record...', 'warning');
+      const now = new Date().toISOString();
+      await db.collection('pelo_master_ledger').doc(driverData.manifestId).update({ status: 'COLLECTED', collectedAt: now, collectedBy: driverData.name, quantumState: { chsh: 2.76, patent: 'SA 2026/05142' } });
+      await db.collection('drivers').doc(DRIVER_ID).update({ completedAt: now, status: 'COMPLETED', manifestId: null });
+      updateDriverStatus('COMPLETED');
+      addAlert(`Collection completed by ${driverData.name}`, '📦');
+      showToast('✅ Collection Sealed! Ready for Gate Verification', 'success');
+      setTimeout(() => {
+        manifestData = null;
+        proximityTriggered = false;
+        pickupLocation.textContent = 'Awaiting Assignment...';
+        distanceValue.textContent = '—';
+        etaValue.textContent = '—';
+        updateDriverStatus('OFFLINE');
+        if (isTracking) stopTracking();
+      }, 4000);
+    } catch (err) { showToast('❌ Completion error: ' + err.message, 'error'); }
+  }
+
+  // ============================================================
+  // PROOF UPLOAD — PREVIEW BEFORE SAVE
+  // ============================================================
+  function openPreview(fileInputId, proofType) {
+    const input = document.getElementById(fileInputId);
+    const file = input.files[0];
+
+    if (!file) {
+      showToast('⚠️ No photo captured. Please try again.', 'warning');
+      return;
+    }
+
+    // Revoke any previous preview URL
+    if (pendingProof && pendingProof.previewURL) {
+      URL.revokeObjectURL(pendingProof.previewURL);
+    }
+
+    const previewURL = URL.createObjectURL(file);
+    pendingProof = { file, proofType, inputId: fileInputId, previewURL };
+
+    previewImage.src = previewURL;
+    previewTitle.textContent = `Preview: ${proofType}`;
+    previewModal.classList.add('active');
+
+    // Clear input so the same file can be re-selected if they retake
+    input.value = '';
+  }
+
+  function cancelPreview() {
+    previewModal.classList.remove('active');
+    if (pendingProof && pendingProof.previewURL) {
+      URL.revokeObjectURL(pendingProof.previewURL);
+    }
+    pendingProof = null;
+    previewImage.src = '';
+    showToast('🔄 Retake cancelled. Tap the button again.', 'warning');
+  }
+
+  async function confirmAndUpload() {
+    if (!pendingProof) {
+      showToast('⚠️ No photo to upload.', 'error');
+      return;
+    }
+
+    const { file, proofType, previewURL } = pendingProof;
+    previewModal.classList.remove('active');
+    showToast(`⏳ Uploading ${proofType}...`, 'info');
+
+    try {
+      // 1. Upload to Firebase Storage
+      const storageRef = storage.ref(`proofs/${DRIVER_ID}/${proofType}_${Date.now()}_${file.name}`);
+      const snapshot = await storageRef.put(file);
+      const downloadURL = await snapshot.ref.getDownloadURL();
+
+      // 2. Log metadata to Firestore
+      const proofRecord = {
+        type: proofType,
+        driverId: DRIVER_ID,
+        timestamp: new Date().toISOString(),
+        latitude: driverData ? driverData.currentLat : null,
+        longitude: driverData ? driverData.currentLng : null,
+        fileName: file.name,
+        fileSize: file.size,
+        downloadURL: downloadURL,
+        chsh_s: '2.76',
+        patent: 'SA 2026/05142'
+      };
+
+      await db.collection('driver_proofs').add(proofRecord);
+
+      // 3. If fuel proof, update manifest
+      if (proofType === 'Fuel Receipt') {
+        const odometer = document.getElementById('odometerKm').value;
+        if (odometer && driverData && driverData.manifestId) {
+          await db.collection('pelo_master_ledger').doc(driverData.manifestId).update({
+            fuelOdometerKm: parseInt(odometer),
+            fuelReceiptURL: downloadURL,
+            fuelReceiptAt: new Date().toISOString()
+          });
+        }
+      }
+
+      addAlert(`📸 ${proofType} uploaded`, '✅');
+      showToast(`✅ ${proofType} uploaded successfully!`, 'success');
+
+    } catch (error) {
+      console.error('Proof upload error:', error);
+      const storageDenied = error && (error.code === 'storage/unauthorized' || /permission|unauthoriz/i.test(error.message || ''));
+      showToast(storageDenied ? '❌ Upload blocked by Firebase Storage permissions. Contact the administrator.' : `❌ Upload failed: ${error.message || 'Please try again.'}`, 'error');
+      addAlert(`❌ ${proofType} upload failed`, '❌');
+    }
+
+    if (previewURL) URL.revokeObjectURL(previewURL);
+    pendingProof = null;
+    previewImage.src = '';
+  }
+
+  // Attach event listeners to the hidden file inputs
+  document.getElementById('sobrietyPhotoInput').addEventListener('change', function() {
+    openPreview('sobrietyPhotoInput', 'Sobriety Check');
+  });
+
+  document.getElementById('fuelReceiptInput').addEventListener('change', function() {
+    // Validate odometer before opening preview
+    const odometer = document.getElementById('odometerKm').value;
+    if (!odometer) {
+      showToast('⚠️ Please enter the odometer reading first.', 'warning');
+      this.value = '';
+      return;
+    }
+    openPreview('fuelReceiptInput', 'Fuel Receipt');
+  });
+
+  document.getElementById('deliveryDocInput').addEventListener('change', function() {
+    openPreview('deliveryDocInput', 'Delivery Document');
+  });
+
+  function addAlert(message, icon = '🔔') {
+    const emptyMsg = document.getElementById('emptyAlertMsg');
+    if (emptyMsg) emptyMsg.remove();
+    const time = new Date().toLocaleTimeString();
+    const alertItem = document.createElement('div');
+    alertItem.className = 'alert-item';
+    alertItem.innerHTML = `<span class="alert-icon">${icon}</span><span style="flex:1; font-weight:600;">${message}</span><span class="alert-time">${time}</span>`;
+    alertFeed.insertBefore(alertItem, alertFeed.firstChild);
+    while (alertFeed.children.length > 8) { alertFeed.removeChild(alertFeed.lastChild); }
+  }
+
+  function showToast(msg, type = 'info') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.className = 'toast ' + type;
+    div.textContent = msg;
+    document.body.appendChild(div);
+    setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
+  }
+
+  function listenForManifest() {
+    db.collection('drivers').doc(DRIVER_ID).onSnapshot(snapshot => {
+      if (snapshot.exists) {
+        const data = snapshot.data();
+        driverData = data;
+        if (data.manifestId && (!manifestData || data.manifestId !== manifestData.manifestId)) { loadManifest(data.manifestId); }
+      }
+    }, err => console.error("Driver snapshot listener error:", err));
+  }
+
+  async function loadManifest(manifestId) {
+    if (!auth.currentUser) {
+      console.warn('Manifest load skipped: Firebase Auth is not ready.');
+      return;
+    }
+    if (!manifestId) {
+      console.warn('Manifest load skipped: no manifestId was supplied.');
+      return;
+    }
+
+    try {
+      const doc = await db.collection('pelo_master_ledger').doc(manifestId).get();
+      if (doc.exists) {
+        manifestData = doc.data();
+        manifestData.manifestId = manifestId;
+        pickupLocation.textContent = manifestData.areaCommunity || manifestData.companyName || 'Target Pickup Point';
+        proximityTriggered = false;
+        addAlert(`Manifest #${manifestId.substring(0,6)} Assigned`, '📦');
+        showToast(`📦 New Dispatch Assignment Received`, 'success');
+        if (isTracking) { updateDriverStatus('EN_ROUTE'); }
+      }
+    } catch (err) { console.error('Load manifest error:', err); }
+  }
+
+  // ============================================================
+  // WAIT FOR AUTH BEFORE LOADING FIRESTORE DATA
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', function() {
+    auth.onAuthStateChanged(async (user) => {
+      try {
+        // Do not query Firestore until Firebase has confirmed a signed-in user.
+        if (!user) {
+          if (authInitializationSignInInProgress) return;
+          authInitializationSignInInProgress = true;
+          try {
+            await auth.signInAnonymously();
+            console.log('✅ Anonymous authentication requested.');
+          } catch (error) {
+            authInitializationSignInInProgress = false;
+            console.error('❌ Anonymous auth failed:', error.code || error.message, error);
+            showToast('❌ Sign-in failed. Check Firebase Anonymous provider.', 'error');
+          }
+          return;
         }
 
-        function listenStats() {
-            db.collection('entries').onSnapshot(function(snap) {
-                var entries = snap.docs.map(function(d) { return d.data(); });
-                var total = snap.size;
-                var oil = 0;
-                entries.forEach(function(e) { oil += (e.oilVolume || 0); });
-                statEntries.textContent = total;
-                statOil.textContent = oil + 'L';
-            }, function(error) { console.warn('Stats listener error:', error.message); });
-            
-            db.collection('collectors').onSnapshot(function(snap) { statCollectors.textContent = snap.size; }, function(error) { console.warn('Collectors listener error:', error.message); });
-            db.collection('users').onSnapshot(function(snap) { statUsers.textContent = snap.size; }, function(error) { console.warn('Users listener error:', error.message); });
-            db.collection('entries').where('auditStatus', '==', 'flagged_for_review').onSnapshot(function(snap) { statPending.textContent = snap.size; }, function(error) { console.warn('Pending stat error:', error.message); });
-            db.collection('payment_audits').onSnapshot(function(snap) {
-                var total = 0;
-                snap.docs.forEach(function(d) { total += (d.data().amount || 0); });
-                statPayouts.textContent = 'R' + total.toFixed(0);
-            }, function(error) { console.warn('Payouts listener error:', error.message); });
-        }
+        authInitializationSignInInProgress = false;
+        if (appInitializationStarted) return;
 
-        function listenEntries() {
-            if (entriesUnsubscribe) entriesUnsubscribe();
-            entriesUnsubscribe = db.collection('entries').orderBy('timestamp', 'desc').limit(50).onSnapshot(function(snap) {
-                entriesLoading.style.display = 'none';
-                entryCount.textContent = snap.size + ' entries';
-                if (snap.empty) {
-                    entriesTable.style.display = 'none';
-                    entriesEmpty.style.display = 'block';
-                    entriesBody.innerHTML = '';
-                    return;
-                }
-                entriesEmpty.style.display = 'none';
-                entriesTable.style.display = 'table';
-                entriesBody.innerHTML = '';
-                snap.docs.forEach(function(doc) {
-                    var data = doc.data();
-                    var status = data.auditStatus || 'pending';
-                    var statusClass = status === 'verified' ? 'verified' : status === 'flagged_for_review' ? 'flagged' : 'pending';
-                    var statusDisplay = status === 'flagged_for_review' ? '⚠️ Flagged' : status;
-                    
-                    var row = document.createElement('tr');
-                    row.innerHTML = '<td><strong>' + escapeHtml(data.ownerName || 'Unknown') + '</strong></td>' +
-                        '<td>' + escapeHtml(data.area || 'N/A') + '</td>' +
-                        '<td>' + (data.oilVolume || 0) + 'L</td>' +
-                        '<td><span class="status-badge ' + statusClass + '">' + statusDisplay + '</span></td>' +
-                        '<td><button class="btn-sm view" onclick="viewEntry(\'' + doc.id + '\')">View</button> ' +
-                        '<button class="btn-sm certify" ' + (isAdminUser ? '' : 'disabled') + ' onclick="generateCertificate(\'' + doc.id + '\')"><i class="fas fa-file-signature"></i> Certify</button>' +
-                        (status === 'flagged_for_review' ? ' <button class="btn-sm approve" ' + (isAdminUser ? '' : 'disabled') + ' onclick="approveEntry(\'' + doc.id + '\')">Approve</button>' : '') +
-                        '</td>';
-                    entriesBody.appendChild(row);
-                });
-            }, function(error) {
-                entriesLoading.style.display = 'none';
-                console.error('Entries listener error:', error);
-                showToast('Error loading entries: ' + error.message);
-            });
-        }
+        appInitializationStarted = true;
+        authReady = true;
+        console.log('✅ Auth ready. UID:', user.uid, 'Anonymous:', user.isAnonymous);
 
-        function listenPending() {
-            if (pendingUnsubscribe) pendingUnsubscribe();
-            pendingUnsubscribe = db.collection('collectors').where('status', '==', 'pending').onSnapshot(function(snap) {
-                pendingLoading.style.display = 'none';
-                pendingCount.textContent = snap.size;
-                if (snap.empty) {
-                    pendingTable.style.display = 'none';
-                    pendingEmpty.style.display = 'block';
-                    pendingBody.innerHTML = '';
-                    return;
-                }
-                pendingEmpty.style.display = 'none';
-                pendingTable.style.display = 'table';
-                pendingBody.innerHTML = '';
-                snap.docs.forEach(function(doc) {
-                    var data = doc.data();
-                    var row = document.createElement('tr');
-                    row.innerHTML = '<td><strong>' + escapeHtml(data.name || 'Unknown') + '</strong></td>' +
-                        '<td>' + escapeHtml(data.area || 'N/A') + '</td>' +
-                        '<td><button class="btn-sm approve" ' + (isAdminUser ? '' : 'disabled') + ' onclick="approveCollector(\'' + doc.id + '\')">Approve</button> ' +
-                        '<button class="btn-sm reject" ' + (isAdminUser ? '' : 'disabled') + ' onclick="rejectCollector(\'' + doc.id + '\')">Reject</button></td>';
-                    pendingBody.appendChild(row);
-                });
-            }, function(error) {
-                pendingLoading.style.display = 'none';
-                console.error('Pending listener error:', error);
-            });
-        }
+        await loadDriverData();
+        listenForManifest();
 
-        function listenAudits() {
-            if (auditUnsubscribe) auditUnsubscribe();
-            auditUnsubscribe = db.collection('quantum_audits').where('status', '==', 'flagged_for_review').limit(20).onSnapshot(function(snap) {
-                auditLoading.style.display = 'none';
-                auditCount.textContent = snap.size + ' flagged';
-                if (snap.empty) {
-                    auditTable.style.display = 'none';
-                    auditEmpty.style.display = 'block';
-                    auditBody.innerHTML = '';
-                    return;
-                }
-                auditEmpty.style.display = 'none';
-                auditTable.style.display = 'table';
-                auditBody.innerHTML = '';
-                snap.docs.forEach(function(doc) {
-                    var data = doc.data();
-                    var riskColor = data.riskScore > 70 ? 'var(--danger)' : 'var(--warning)';
-                    var row = document.createElement('tr');
-                    row.innerHTML = '<td><code style="font-size:0.6rem;">' + escapeHtml(data.entryId || 'N/A').substring(0, 12) + '</code></td>' +
-                        '<td><strong style="color:' + riskColor + ';">' + (data.riskScore || 0) + '%</strong></td>' +
-                        '<td style="font-size:0.6rem;">' + ((data.anomalies || ['None']).join(', ')) + '</td>' +
-                        '<td><span class="status-badge flagged">Flagged</span></td>' +
-                        '<td><button class="btn-sm approve" ' + (isAdminUser ? '' : 'disabled') + ' onclick="resolveAudit(\'' + doc.id + '\')">Resolve</button> ' +
-                        '<button class="btn-sm view" onclick="viewEntry(\'' + (data.entryId || '') + '\')">View</button></td>';
-                    auditBody.appendChild(row);
-                });
-            }, function(error) {
-                auditLoading.style.display = 'none';
-                console.error('Audit listener error:', error);
-            });
-        }
+        console.log('🚀 MindTech Driver Command Engine Fully Initialized');
+      } catch (error) {
+        appInitializationStarted = false;
+        console.error('❌ Initialization error:', error.code || error.message, error);
+        showToast('⚠️ Driver initialization failed: ' + (error.code || error.message), 'error');
+      }
+    });
 
-        window.approveCollector = function(id) {
-            if (!isAdminUser) { showToast('❌ Admin only', 'error'); return; }
-            db.collection('collectors').doc(id).update({ status: 'active', approvedAt: firebase.firestore.FieldValue.serverTimestamp() })
-            .then(function() { showToast('✅ Collector approved!'); })
-            .catch(function(e) { showToast('❌ Error: ' + e.message); });
-        };
-
-        window.rejectCollector = function(id) {
-            if (!isAdminUser) { showToast('❌ Admin only', 'error'); return; }
-            if (!confirm('Reject this collector?')) return;
-            db.collection('collectors').doc(id).delete()
-            .then(function() { showToast('🗑️ Collector removed.'); })
-            .catch(function(e) { showToast('❌ Error: ' + e.message); });
-        };
-
-        window.approveEntry = function(id) {
-            if (!isAdminUser) { showToast('❌ Admin only', 'error'); return; }
-            var batch = db.batch();
-            var entryRef = db.collection('entries').doc(id);
-            var auditRef = db.collection('quantum_audits').doc(id);
-            batch.update(entryRef, { auditStatus: 'verified', resolvedAt: firebase.firestore.FieldValue.serverTimestamp() });
-            batch.update(auditRef, { status: 'verified', resolvedAt: firebase.firestore.FieldValue.serverTimestamp() });
-            batch.commit()
-            .then(function() { showToast('✅ Entry approved!'); })
-            .catch(function(e) { showToast('❌ Error: ' + e.message); });
-        };
-
-        window.resolveAudit = function(id) {
-            if (!isAdminUser) { showToast('❌ Admin only', 'error'); return; }
-            if (!confirm('Resolve this flagged audit?')) return;
-            var batch = db.batch();
-            var auditRef = db.collection('quantum_audits').doc(id);
-            batch.update(auditRef, { status: 'resolved', resolvedAt: firebase.firestore.FieldValue.serverTimestamp() });
-            auditRef.get().then(function(doc) {
-                if (doc.exists && doc.data().entryId) {
-                    var entryRef = db.collection('entries').doc(doc.data().entryId);
-                    batch.update(entryRef, { auditStatus: 'verified', resolvedAt: firebase.firestore.FieldValue.serverTimestamp() });
-                }
-                return batch.commit();
-            }).then(function() { showToast('✅ Audit resolved!'); })
-            .catch(function(e) { showToast('❌ Error: ' + e.message); });
-        };
-
-        window.viewEntry = function(id) {
-            db.collection('entries').doc(id).get().then(function(doc) {
-                if (!doc.exists) return;
-                var d = doc.data();
-                alert('📋 ENTRY DETAILS\n\nOwner: ' + (d.ownerName || 'N/A') + '\nArea: ' + (d.area || 'N/A') + '\nOil: ' + (d.oilVolume || 0) + 'L\nContact: ' + (d.contactPerson || 'N/A') + '\nStatus: ' + (d.auditStatus || 'pending'));
-            }).catch(function(e) { showToast('Error: ' + e.message); });
-        };
-
-        // ============================================================
-        // CERTIFICATE GENERATOR (Secured & Fixed)
-        // ============================================================
-        window.generateCertificate = async function(entryId) {
-            if (!isAdminUser) { showToast('❌ Admin only', 'error'); return; }
-            
-            try {
-                const doc = await db.collection('entries').doc(entryId).get();
-                if (!doc.exists) { showToast('❌ Entry not found.', 'error'); return; }
-                
-                const entryData = doc.data();
-                showToast('⏳ Calling PELO Ledger...', 'info');
-
-                // 1. Package the data for the backend
-                const certificateData = {
-                    entry_id: entryId,
-                    owner_name: entryData.ownerName || 'Unknown',
-                    area: entryData.area || 'N/A',
-                    oil_volume: entryData.oilVolume || 0,
-                    timestamp: entryData.timestamp || new Date().toISOString()
-                };
-
-                // 2. Call the backend to issue the certificate
-                const response = await fetch('https://pelo-complete-bm8s.onrender.com/api/v1/issue/certificate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(certificateData)
-                });
-
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.detail || 'Ledger issuance failed');
-                }
-
-                const quantumReceipt = await response.json();
-                const hashHex = quantumReceipt.certificate_hash;
-                const signatureHex = quantumReceipt.signature;
-
-                // 3. Update the Firestore entry with the certificate hash
-                await db.collection('entries').doc(entryId).update({
-                    certificate_hash: hashHex,
-                    signature: signatureHex,
-                    auditStatus: 'certified',
-                    certifiedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // 4. Generate PDF using jsPDF
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF();
-                
-                // --- PDF HEADER ---
-                pdf.setFontSize(22);
-                pdf.setTextColor(200, 164, 80);
-                pdf.text("Certificate of Destruction", 20, 30);
-                
-                pdf.setFontSize(10);
-                pdf.setTextColor(100);
-                pdf.text("Powered by MindTech Industries · PELO Ledger", 20, 38);
-                
-                // --- RECORD DETAILS ---
-                pdf.setFontSize(12);
-                pdf.setTextColor(0);
-                pdf.text("Entry ID: " + entryId, 20, 60);
-                pdf.text("Owner: " + (entryData.ownerName || 'N/A'), 20, 70);
-                pdf.text("Area: " + (entryData.area || 'N/A'), 20, 80);
-                pdf.text("Volume: " + (entryData.oilVolume || 0) + "L", 20, 90);
-                pdf.text("Recorded Timestamp: " + (entryData.timestamp || 'N/A'), 20, 100);
-                
-                // --- DUAL QUANTUM ATTESTATION ---
-                pdf.setFontSize(14);
-                pdf.setTextColor(0, 100, 200);
-                pdf.text("Hardware Attestation (Dual Anchor)", 20, 125);
-                
-                pdf.setFontSize(10);
-                pdf.setTextColor(0);
-                // Canonical Anchor
-                pdf.text("Canonical Proof (IBM Kingston):", 20, 135);
-                pdf.text("  CHSH S: 2.76", 20, 142);
-                pdf.text("  Job ID: d8uhvl4bp3hs738628cg", 20, 149);
-                pdf.text("  Date: 2026-06-25", 20, 156);
-                
-                // On-Demand Replication
-                pdf.text("On-Demand Replication (IBM Fez):", 20, 168);
-                pdf.text("  CHSH S: 2.02", 20, 175);
-                pdf.text("  Job ID: dbpk42dt7fqc7389j290", 20, 182);
-                pdf.text("  Date: 2026-11-10", 20, 189);
-                
-                // --- ISSUANCE PROOF (Ledger) ---
-                pdf.setFontSize(14);
-                pdf.setTextColor(0, 150, 0);
-                pdf.text("Issuance Proof (Ledger)", 20, 210);
-                
-                pdf.setFontSize(10);
-                pdf.setTextColor(0);
-                pdf.text("Ledger Hash: " + hashHex, 20, 220);
-                pdf.text("Signature: " + signatureHex.substring(0, 64) + "...", 20, 227);
-                pdf.text("Issued At: " + new Date().toISOString(), 20, 234);
-                
-                // --- DISCLAIMER ---
-                pdf.setFontSize(9);
-                pdf.setTextColor(100);
-                pdf.text("The Kingston attestation proves the canonical physics. The Fez attestation proves on-demand replication.", 20, 250);
-                pdf.text("The ledger hash and signature prove this specific certificate was issued today.", 20, 257);
-                
-                // --- VERIFICATION ---
-                pdf.setTextColor(0, 100, 200);
-                pdf.text("Verify this certificate at:", 20, 275);
-                pdf.text("https://pelo-verify-portal.onrender.com", 20, 282);
-                pdf.text("SHA-256 Hash: " + hashHex, 20, 289);
-
-                // 5. Save PDF
-                pdf.save(`Certificate_${entryId}.pdf`);
-
-                showToast('✅ Certificate generated, signed, and stored in Firestore!', 'success');
-
-            } catch (error) {
-                console.error(error);
-                showToast('❌ Error generating certificate: ' + error.message, 'error');
-            }
-        };
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function showToast(msg, type) {
-            var existing = document.querySelector('.toast');
-            if (existing) existing.remove();
-            var div = document.createElement('div');
-            div.className = 'toast';
-            if (type === 'error') div.style.borderColor = 'var(--danger)';
-            if (type === 'success') div.style.borderColor = 'var(--success)';
-            div.textContent = msg;
-            document.body.appendChild(div);
-            setTimeout(function() { if (div.parentNode) div.remove(); }, 3500);
-        }
-
-        console.log('🚀 MindTech Dashboard v3.1 — Dual Anchor + Firestore Sync');
-        console.log('⚛️ CHSH S=2.76 (Kingston) · S=2.02 (Fez) · SA 2026/05142');
-        console.log('📡 Real-time listeners active');
-        console.log('🔐 Admin claim check enforced.');
-    </script>
+    console.log('🚀 MindTech Driver Command Engine Starting');
+    console.log('⚛️ Quantum Telemetry Protocol: CHSH S=2.76');
+  });
+</script>
 
 </body>
 </html>
