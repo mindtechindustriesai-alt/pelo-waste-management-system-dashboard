@@ -1,3 +1,4 @@
+<!-- Updated to point to https://pelo-complete-bm8s.onrender.com -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -233,8 +234,8 @@
             
             (async function runHandshake() {
                 try {
-                    await fetch('https://pelo-complete.onrender.com/health', { method: 'GET', signal: AbortSignal.timeout(5000) }).catch(() => {});
-                    const res = await fetch('https://pelo-complete.onrender.com/api/v1/verify/chsh', {
+                    await fetch('https://pelo-complete-bm8s.onrender.com/health', { method: 'GET', signal: AbortSignal.timeout(5000) }).catch(() => {});
+                    const res = await fetch('https://pelo-complete-bm8s.onrender.com/api/v1/verify/chsh', {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
                         signal: AbortSignal.timeout(30000)
@@ -551,7 +552,7 @@
                 };
 
                 // 2. Call the backend to issue the certificate (which will hash it, sign it, and save to ledger)
-                const response = await fetch('https://pelo-complete.onrender.com/api/v1/issue/certificate', {
+                const response = await fetch('https://pelo-complete-bm8s.onrender.com/api/v1/issue/certificate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(certificateData)
